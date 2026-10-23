@@ -2,7 +2,7 @@
   "id": "software",
   "title": "Yazılım",
   "symbol": "chevron.left.forwardslash.chevron.right",
-  "version": 1,
+  "version": 2,
   "facts": [
     { "id": "software-001", "text": "Git'te her commit, bir önceki commit'in hash'ini içerir; bu yüzden geçmişi iz bırakmadan değiştirmek mümkün değildir." },
     { "id": "software-002", "text": "Bilinen ilk 'bug' kaydı 1947'de Harvard Mark II'nin bir rölesine sıkışan güvedir; ekip onu kayıt defterine yapıştırdı." },
@@ -15,6 +15,8 @@
     { "id": "software-009", "text": "Hash tablosunda arama ortalamada O(1)'dir; ama çakışmalar birikirse en kötü durumda O(n)'e düşebilir." },
     { "id": "software-010", "text": "Ada Lovelace, 1843'te Analitik Makine için yazdığı notlarla ilk bilgisayar programı sayılan algoritmayı yayımladı." },
     { "id": "software-011", "text": "\"Erken optimizasyon tüm kötülüklerin anasıdır.\" — Donald Knuth, 1974" },
-    { "id": "software-012", "text": "Python'un adı yılandan değil, Guido van Rossum'un sevdiği Monty Python komedi grubundan gelir." }
+    { "id": "software-012", "text": "Python'un adı yılandan değil, Guido van Rossum'un sevdiği Monty Python komedi grubundan gelir." },
+    { "id": "software-013", "text": "Özyinelemeli bir fonksiyonun durma koşulu yoksa program çağrı yığınını doldurur ve 'stack overflow' hatasıyla çöker." },
+    { "id": "software-014", "text": "Linus Torvalds Linux'u 1991'de \"sadece bir hobi, büyük ve profesyonel olmayacak\" diyerek duyurdu." }
   ]
 }

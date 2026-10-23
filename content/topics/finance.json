@@ -2,7 +2,7 @@
   "id": "finance",
   "title": "Finans",
   "symbol": "chart.line.uptrend.xyaxis",
-  "version": 1,
+  "version": 2,
   "facts": [
     { "id": "finance-001", "text": "72 Kuralı: 72'yi yıllık getiri oranına bölersen, paranın yaklaşık kaç yılda ikiye katlanacağını bulursun." },
     { "id": "finance-002", "text": "Enflasyon %50 iken %40 faiz alıyorsan reel getirin yaklaşık %-6,7'dir: Paran büyür ama alım gücün küçülür." },
@@ -15,6 +15,8 @@
     { "id": "finance-009", "text": "Endeks fonları piyasayı yenmeye çalışmaz, onu taklit eder; düşük masraf oranı uzun vadede getiride ciddi fark yaratır." },
     { "id": "finance-010", "text": "Tahvil fiyatları ile faiz oranları ters yönde hareket eder: Faizler yükselince mevcut tahvillerin fiyatı düşer." },
     { "id": "finance-011", "text": "Kayıptan kaçınma: İnsanlar bir kaybın acısını, eşit büyüklükteki bir kazancın sevincinden daha güçlü hisseder." },
-    { "id": "finance-012", "text": "Bileşik getiride zaman en güçlü değişkendir: Erken başlanan küçük birikimler, geç başlanan büyük birikimleri geçebilir." }
+    { "id": "finance-012", "text": "Bileşik getiride zaman en güçlü değişkendir: Erken başlanan küçük birikimler, geç başlanan büyük birikimleri geçebilir." },
+    { "id": "finance-013", "text": "Kâr ile nakit aynı şey değildir: Kâr eden bir işletme de nakdi yetmediği için faturalarını ödeyemeyip batabilir." },
+    { "id": "finance-014", "text": "Risk ile getiri birlikte hareket eder: Olağanın üzerinde bir getiri vaadi, genellikle daha yüksek riskin işaretidir." }
   ]
 }

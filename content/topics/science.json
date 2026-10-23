@@ -2,7 +2,7 @@
   "id": "science",
   "title": "Bilim",
   "symbol": "atom",
-  "version": 1,
+  "version": 2,
   "facts": [
     { "id": "science-001", "text": "Güneş'ten çıkan ışık Dünya'ya yaklaşık 8 dakika 20 saniyede ulaşır." },
     { "id": "science-002", "text": "İki insanın DNA'sı yaklaşık %99,9 oranında aynıdır." },
@@ -15,6 +15,8 @@
     { "id": "science-009", "text": "İnsan beyninde yaklaşık 86 milyar nöron bulunur." },
     { "id": "science-010", "text": "Penisilin, 1928'de Alexander Fleming'in bir petri kabında üreyen küfü fark etmesiyle keşfedildi." },
     { "id": "science-011", "text": "Ses boşlukta yayılamaz; titreşimleri taşıyacak hava, su ya da katı gibi bir ortam gerekir." },
-    { "id": "science-012", "text": "Elmas ve grafitin ikisi de saf karbondur; aradaki fark yalnızca atomların diziliş biçimidir." }
+    { "id": "science-012", "text": "Elmas ve grafitin ikisi de saf karbondur; aradaki fark yalnızca atomların diziliş biçimidir." },
+    { "id": "science-013", "text": "Bir çay kaşığı nötron yıldızı maddesi, Dünya'da yaklaşık milyarlarca ton gelir." },
+    { "id": "science-014", "text": "Yıldırımın çevresindeki hava yaklaşık 30.000 °C'ye ulaşır; bu, Güneş'in yüzeyinden kabaca beş kat sıcaktır." }
   ]
 }

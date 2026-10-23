@@ -7,8 +7,8 @@
       "description": "Programlama tarihi, ilkeler ve kavramlar",
       "symbol": "chevron.left.forwardslash.chevron.right",
       "file": "topics/software.json",
-      "version": 1,
-      "count": 12
+      "version": 2,
+      "count": 14
     },
     {
       "id": "finance",
@@ -16,8 +16,8 @@
       "description": "Kişisel finans, yatırım ve piyasa kavramları",
       "symbol": "chart.line.uptrend.xyaxis",
       "file": "topics/finance.json",
-      "version": 1,
-      "count": 12
+      "version": 2,
+      "count": 14
     },
     {
       "id": "philosophy",
@@ -25,8 +25,8 @@
       "description": "Düşünürler, akımlar ve düşünce deneyleri",
       "symbol": "brain.head.profile",
       "file": "topics/philosophy.json",
-      "version": 1,
-      "count": 12
+      "version": 2,
+      "count": 14
     },
     {
       "id": "science",
@@ -34,8 +34,8 @@
       "description": "Fizik, biyoloji ve astronomiden kısa bilgiler",
       "symbol": "atom",
       "file": "topics/science.json",
-      "version": 1,
-      "count": 12
+      "version": 2,
+      "count": 14
     }
   ]
 }
