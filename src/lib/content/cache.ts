@@ -21,16 +21,19 @@ export async function loadManifest(): Promise<{ manifest: Manifest; offline: boo
 }
 
 /** Downloads packs that are missing or older than the catalog version. */
-export async function syncPacks(topics: TopicSummary[]): Promise<TopicPack[]> {
-  return Promise.all(
+export async function syncPacks(topics: TopicSummary[]): Promise<{ packs: TopicPack[]; downloaded: number }> {
+  let downloaded = 0;
+  const packs = await Promise.all(
     topics.map(async (topic) => {
       const cached = await readJSON<TopicPack>(packKey(topic.id));
       if (cached && cached.version >= topic.version) return cached;
       const pack = await fetchTopicPack(topic);
       await writeJSON(packKey(topic.id), pack);
+      downloaded++;
       return pack;
     }),
   );
+  return { packs, downloaded };
 }
 
 /** Reads already-downloaded packs; never touches the network (safe for background tasks). */

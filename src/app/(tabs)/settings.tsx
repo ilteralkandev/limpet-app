@@ -23,7 +23,7 @@ const sameSet = (a: string[], b: string[]) => a.length === b.length && a.every((
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const now = useNow();
-  const { prefs, snapshot, savePreferences, setLockScreen } = useAppState();
+  const { prefs, snapshot, savePreferences, setLockScreen, updateContent } = useAppState();
   const [catalog, setCatalog] = useState<TopicSummary[] | null>(null);
   const [offline, setOffline] = useState(false);
   const [catalogError, setCatalogError] = useState<string | null>(null);
@@ -31,7 +31,8 @@ export default function SettingsScreen() {
   const [intervalMinutes, setIntervalMinutes] = useState(prefs.intervalMinutes);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [refreshedAt, setRefreshedAt] = useState<number | null>(null);
+  const [update, setUpdate] = useState<{ at: number; downloaded: number } | null>(null);
+  const [updating, setUpdating] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
@@ -51,18 +52,32 @@ export default function SettingsScreen() {
 
   const dirty = !sameSet(topicIds, prefs.topicIds) || intervalMinutes !== prefs.intervalMinutes;
 
-  const save = async (refresh = false) => {
+  const save = async () => {
     if (!catalog) return;
     setSaving(true);
     setSaveError(null);
     try {
       await savePreferences({ ...prefs, topicIds, intervalMinutes }, catalog);
       haptic.success();
-      if (refresh) setRefreshedAt(Date.now());
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : String(error));
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Re-reads the catalog from the host, so it never judges against a stale list.
+  const checkForUpdates = async () => {
+    setUpdating(true);
+    setSaveError(null);
+    try {
+      const downloaded = await updateContent();
+      setUpdate({ at: Date.now(), downloaded });
+      haptic.success();
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -134,17 +149,17 @@ export default function SettingsScreen() {
         <Section title="İçerik">
           <View style={styles.card}>
             <Text style={styles.muted}>
-              {refreshedAt
-                ? `Paketler güncel · son kontrol ${relativeTime(refreshedAt, now)}`
-                : 'Yeni bilgiler yayınlandığında paketler ayarları kaydederken güncellenir. Şimdi kontrol etmek için:'}
+              {update
+                ? `${update.downloaded ? `${update.downloaded} paket güncellendi` : 'Paketler güncel'} · son kontrol ${relativeTime(update.at, now)}`
+                : 'Yeni bilgiler yayınlandığında paketler kendiliğinden güncellenir (en fazla 6 saatte bir). Şimdi kontrol etmek için:'}
             </Text>
             <Button
               title="Paketleri güncelle"
               variant="ghost"
               icon="arrow.clockwise"
-              loading={saving && !dirty}
-              onPress={() => save(true)}
-              disabled={!catalog || dirty}
+              loading={updating}
+              onPress={checkForUpdates}
+              disabled={saving || dirty}
             />
           </View>
         </Section>

@@ -1,7 +1,7 @@
 // Single entry point for "what card is showing and is the lock screen in sync".
 // Used by the UI and by the background task, so it must not depend on React.
 import { hideFromLockScreen, isShownOnLockScreen, showOnLockScreen } from '@/live-activity';
-import { loadCachedPacks, pruneCachedPacks, syncPacks } from '@/lib/content/cache';
+import { loadCachedPacks, loadManifest, pruneCachedPacks, syncPacks } from '@/lib/content/cache';
 import type { TopicSummary } from '@/lib/content/types';
 import { recordShown } from '@/lib/library';
 import { loadPreferences, savePreferences, type Preferences } from '@/lib/preferences';
@@ -19,6 +19,9 @@ import { readJSON, writeJSON } from '@/lib/storage';
 import { cancelBackgroundRotation, scheduleBackgroundRotation } from '@/tasks/rotate-task';
 
 const ROTATION_KEY = 'rotation:v1';
+const CONTENT_CHECKED_AT_KEY = 'content:checkedAt';
+// New packs reach users within this window after being published.
+const CONTENT_CHECK_INTERVAL_MS = 6 * 60 * 60_000;
 // Mark the lock screen card stale if it misses its update by this much.
 const STALE_GRACE_MS = 15 * 60_000;
 
@@ -105,6 +108,34 @@ export async function applyPreferences(prefs: Preferences, catalog: TopicSummary
   await pruneCachedPacks(prefs.topicIds);
   await updateSchedule(prefs);
   return rotate({ refreshLockScreen: true });
+}
+
+/**
+ * Fetches the catalog and downloads packs of followed topics that have a newer version.
+ * Always compares against a fresh catalog; throws when offline so callers never report a
+ * stale "up to date". Returns how many packs were downloaded.
+ */
+export async function updateContentNow(): Promise<number> {
+  const prefs = await loadPreferences();
+  const { manifest, offline } = await loadManifest();
+  if (offline) throw new Error('İnternet bağlantısı yok; paketler güncellenemedi.');
+  const { downloaded } = await syncPacks(manifest.topics.filter((t) => prefs.topicIds.includes(t.id)));
+  await writeJSON(CONTENT_CHECKED_AT_KEY, Date.now());
+  // New facts reshuffle the deck; push the current card only if something actually changed.
+  if (downloaded > 0) await rotate({ refreshLockScreen: true });
+  return downloaded;
+}
+
+/** Throttled, silent variant for app start / foreground. Returns true when packs were updated. */
+export async function updateContentIfStale(): Promise<boolean> {
+  const checkedAt = (await readJSON<number>(CONTENT_CHECKED_AT_KEY)) ?? 0;
+  if (Date.now() - checkedAt < CONTENT_CHECK_INTERVAL_MS) return false;
+  if (!(await loadPreferences()).topicIds.length) return false;
+  try {
+    return (await updateContentNow()) > 0;
+  } catch {
+    return false; // offline or host down: keep playing from the cache, retry next time
+  }
 }
 
 /** Turns the lock screen card on/off without re-downloading content. */

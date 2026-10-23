@@ -9,7 +9,7 @@ Kullanıcının seçtiği ilgi alanlarından (yazılım, finans, felsefe…) 1-2
 ```
 content/ (statik host: Netlify; repodaki content/ klasörü her push'ta yayınlanır)
    └─ index.json (katalog) + topics/<id>.json (paketler)
-        │ fetch, yalnızca Ayarlar'da "Kaydet" ile
+        │ fetch: Ayarlar'da "Kaydet", açılışta/öne gelince (6 saatte bir) ve elle "Paketleri güncelle"
         ▼
 src/lib/content/cache.ts  → AsyncStorage'a paket önbelleği (çevrimdışı çalışır)
         ▼
@@ -56,8 +56,10 @@ src/live-activity/index.ios.ts → FactActivity.ios.tsx (expo-widgets createLive
 - Bir paketi değiştirince hem `topics/<id>.json` hem `index.json`'daki `version` artırılır; cihazlar yalnızca daha yüksek sürümü indirir. Bilgi metni en fazla 160 karakter (kilit ekranında 3 satır).
 - Yeni konu: `topics/<id>.json` ekle + `index.json`'a girdi ekle → `npm run content:validate`.
 - Üretim adresi `app.json → extra.contentBaseUrl` = `https://limpet-app.netlify.app` (Netlify, `main`'e bağlı); yerelde `EXPO_PUBLIC_CONTENT_BASE_URL=http://localhost:4000` ile `npm run content:serve` kullanılır.
+- **Cihazdaki paketler sürümle güncellenir:** `updateContentNow()` (`engine.ts`) her seferinde kataloğu yeniden indirir ve yalnızca `version`'ı yükselen paketleri çeker; `updateContentIfStale()` bunu açılışta/öne gelince en fazla 6 saatte bir sessizce yapar. Güncelleme kararı hiçbir zaman ekranda tutulan eski katalogla verilmez.
+- İçerik adresleri sürümlüdür (`topics/x.json?v=<version>`, `lib/content/validate.ts`): iOS, sunucunun `max-age`'i boyunca yanıtı önbellekte tutar ve istek başlığıyla (`no-cache`) bunu aşmak çalışmaz. Eski sürüm gelirse paket reddedilir. Bu yüzden içeriği değiştirince `version` artırmak zorunludur; artırılmazsa cihazlar değişikliği hiç görmez.
 - Yayın `netlify.toml` ile yönetilir: `content/` yayınlanır, önce `content:validate` çalışır (bozuk paket yayına çıkmaz), yalnızca `content/`, doğrulama script'i veya `netlify.toml` değişince yeniden yayınlanır. Önbellek 5 dk; yeni sürüm cihazlara birkaç dakikada ulaşır.
-- İçeriği yayınlamak = `main`'e push. Uygulamanın yeni sürüm indirmesi için paket ve `index.json`'daki `version` artırılmış olmalı.
+- İçeriği yayınlamak = `main`'e push. Paketin ve `index.json`'daki girdinin `version`'ı birlikte artırılır (`content:validate` eşitliği denetler).
 
 ## Bitti sayılmadan önce
 

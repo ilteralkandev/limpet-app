@@ -3,7 +3,14 @@ import { AppState } from 'react-native';
 
 import { isFavorite } from '@/lib/collection';
 import type { TopicSummary } from '@/lib/content/types';
-import { applyPreferences, rotate, setLockScreenEnabled, type Snapshot } from '@/lib/engine';
+import {
+  applyPreferences,
+  rotate,
+  setLockScreenEnabled,
+  updateContentIfStale,
+  updateContentNow,
+  type Snapshot,
+} from '@/lib/engine';
 import { loadLibrary, recordVisitStored, toggleFavoriteStored, type Library } from '@/lib/library';
 import { DEFAULT_PREFERENCES, loadPreferences, type Preferences } from '@/lib/preferences';
 import type { Card } from '@/lib/rotation';
@@ -26,6 +33,8 @@ type AppStateValue = {
   /** Downloads topics and saves settings; throws on network errors. */
   savePreferences: (prefs: Preferences, catalog: TopicSummary[]) => Promise<void>;
   setLockScreen: (enabled: boolean) => Promise<void>;
+  /** Checks the host for newer packs now. Returns how many were downloaded; throws when offline. */
+  updateContent: () => Promise<number>;
 };
 
 const EMPTY_LIBRARY: Library = { favorites: [], history: [], seen: 0, streak: INITIAL_STREAK };
@@ -62,22 +71,34 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     [run],
   );
 
+  // Silent, throttled check for newer packs; refreshes the UI only when something changed.
+  const checkContent = useCallback(async () => {
+    if (await run(() => updateContentIfStale())) await sync();
+  }, [run, sync]);
+
+  const updateContent = useCallback(async () => {
+    const downloaded = await run(() => updateContentNow());
+    await sync();
+    return downloaded;
+  }, [run, sync]);
+
   useEffect(() => {
     recordVisitStored()
       .then(() => sync())
+      .then(() => checkContent())
       .finally(() => setReady(true));
 
     const timer = setInterval(() => {
       if (AppState.currentState === 'active') sync();
     }, FOREGROUND_POLL_MS);
     const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active') recordVisitStored().then(() => sync());
+      if (state === 'active') recordVisitStored().then(() => sync()).then(() => checkContent());
     });
     return () => {
       clearInterval(timer);
       sub.remove();
     };
-  }, [sync]);
+  }, [sync, checkContent]);
 
   const value = useMemo<AppStateValue>(
     () => ({
@@ -100,13 +121,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           setSnapshot(snap);
           setLibrary(await loadLibrary());
         }),
+      updateContent,
       setLockScreen: (enabled) =>
         run(async () => {
           setPrefs((p) => ({ ...p, lockScreenEnabled: enabled }));
           setSnapshot(await setLockScreenEnabled(enabled));
         }),
     }),
-    [ready, prefs, snapshot, library, sync, run],
+    [ready, prefs, snapshot, library, sync, run, updateContent],
   );
 
   return <Context.Provider value={value}>{children}</Context.Provider>;
