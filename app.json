@@ -36,6 +36,7 @@
           "enablePushNotifications": false
         }
       ],
+      "./plugins/with-script-sandboxing-off",
       "expo-background-task",
       "expo-font",
       "expo-asset"
