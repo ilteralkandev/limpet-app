@@ -4,12 +4,19 @@ import { APP_SCHEME } from '@/config';
 import type { Card } from '@/lib/rotation';
 
 import FactActivity from './FactActivity.ios';
+import { ensureMascot } from './mascot.ios';
 
 export const isLiveActivitySupported = true;
 
 /** Shows the card on the lock screen, reusing the running activity when there is one. */
-export async function showOnLockScreen(card: Card, staleDate: Date): Promise<void> {
-  const props = { topic: card.topicTitle, text: card.text, symbol: card.symbol as SFSymbol };
+export async function showOnLockScreen(card: Card, position: string, staleDate: Date): Promise<void> {
+  const props = {
+    topic: card.topicTitle,
+    text: card.text,
+    symbol: card.symbol as SFSymbol,
+    position,
+    shell: (await ensureMascot()) ?? '',
+  };
   const [current, ...extra] = FactActivity.getInstances();
   await Promise.all(extra.map((a) => a.end('immediate')));
   if (current) {

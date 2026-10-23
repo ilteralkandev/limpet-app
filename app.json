@@ -6,7 +6,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.limpetapp.app"
@@ -36,13 +36,16 @@
           "enablePushNotifications": false
         }
       ],
-      "expo-background-task"
+      "expo-background-task",
+      "expo-font",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
-      "contentBaseUrl": "https://raw.githubusercontent.com/ilteralkandev/LimpetApp/main/content"
-    }
+      "contentBaseUrl": "https://raw.githubusercontent.com/ilteralkandev/limpet-app/main/content"
+    },
+    "backgroundColor": "#0F3040"
   }
 }

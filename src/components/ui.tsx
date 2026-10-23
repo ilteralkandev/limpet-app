@@ -1,98 +1,173 @@
+import { SymbolView } from 'expo-symbols';
 import type { ReactNode } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  type PressableProps,
+  type StyleProp,
+  type TextProps,
+  type TextStyle,
+  type ViewStyle,
+} from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import type { SFSymbol } from 'sf-symbols-typescript';
 
-import { useTheme } from '@/theme';
+import { haptic } from '@/lib/haptics';
+import { colors, fonts, radii } from '@/theme';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+type PressableScaleProps = Omit<PressableProps, 'style'> & {
+  style?: StyleProp<ViewStyle>;
+  /** How far the element shrinks while pressed. */
+  scaleTo?: number;
+  haptics?: boolean;
+};
+
+/** Pressable that sinks slightly under the finger, with a light haptic. */
+export function PressableScale({ style, scaleTo = 0.96, haptics = true, onPressIn, onPressOut, onPress, ...rest }: PressableScaleProps) {
+  const scale = useSharedValue(1);
+  const animated = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  return (
+    <AnimatedPressable
+      {...rest}
+      style={[style, animated]}
+      onPressIn={(e) => {
+        scale.set(withSpring(scaleTo, { damping: 15, stiffness: 400 }));
+        onPressIn?.(e);
+      }}
+      onPressOut={(e) => {
+        scale.set(withSpring(1, { damping: 12, stiffness: 300 }));
+        onPressOut?.(e);
+      }}
+      onPress={(e) => {
+        if (haptics) haptic.tap();
+        onPress?.(e);
+      }}
+    />
+  );
+}
 
 type ButtonProps = {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary';
+  variant?: 'primary' | 'ghost';
+  icon?: SFSymbol;
   loading?: boolean;
   disabled?: boolean;
+  style?: StyleProp<ViewStyle>;
 };
 
-export function Button({ title, onPress, variant = 'primary', loading, disabled }: ButtonProps) {
-  const theme = useTheme();
+export function Button({ title, onPress, variant = 'primary', icon, loading, disabled, style }: ButtonProps) {
   const primary = variant === 'primary';
-  const inactive = disabled || loading;
+  const fg = primary ? colors.onCoral : colors.text;
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
-      disabled={inactive}
+      accessibilityState={{ disabled: !!disabled, busy: !!loading }}
+      disabled={disabled || loading}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.button,
-        primary
-          ? { backgroundColor: theme.accent }
-          : { backgroundColor: theme.surface, borderColor: theme.border, borderWidth: 1 },
-        { opacity: inactive ? 0.5 : pressed ? 0.8 : 1 },
-      ]}>
+      style={[styles.button, primary ? styles.primary : styles.ghost, (disabled || loading) && styles.inactive, style]}>
       {loading ? (
-        <ActivityIndicator color={primary ? theme.accentText : theme.text} />
+        <ActivityIndicator color={fg} />
       ) : (
-        <Text style={[styles.buttonText, { color: primary ? theme.accentText : theme.text }]}>{title}</Text>
+        <>
+          {icon ? <SymbolView name={icon} size={17} tintColor={fg} weight="semibold" /> : null}
+          <Text style={[styles.buttonText, { color: fg }]}>{title}</Text>
+        </>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 
-export function Chip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
-  const theme = useTheme();
+type IconButtonProps = {
+  icon: SFSymbol;
+  label: string;
+  onPress: () => void;
+  active?: boolean;
+  size?: number;
+};
+
+/** Round glass button; `active` fills it with coral (e.g. a saved favorite). */
+export function IconButton({ icon, label, onPress, active, size = 56 }: IconButtonProps) {
   return (
-    <Pressable
-      accessibilityRole="radio"
-      accessibilityState={{ selected }}
+    <PressableScale
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: !!active }}
       onPress={onPress}
+      scaleTo={0.88}
       style={[
-        styles.chip,
-        selected
-          ? { backgroundColor: theme.accent, borderColor: theme.accent }
-          : { backgroundColor: theme.surface, borderColor: theme.border },
+        styles.iconButton,
+        { width: size, height: size },
+        active && { backgroundColor: colors.coral, borderColor: colors.coral },
       ]}>
-      <Text style={[styles.chipText, { color: selected ? theme.accentText : theme.text }]}>{label}</Text>
-    </Pressable>
+      <SymbolView name={icon} size={size * 0.38} tintColor={active ? colors.onCoral : colors.text} weight="medium" />
+    </PressableScale>
   );
 }
 
-export function Section({ title, children, style }: { title: string; children: ReactNode; style?: ViewStyle }) {
-  const theme = useTheme();
+/** Large serif screen title, the app's typographic signature. */
+export function Title({ children, style, ...rest }: TextProps & { children: ReactNode }) {
   return (
-    <View style={[styles.section, style]}>
-      <Text style={[styles.sectionTitle, { color: theme.textMuted }]}>{title}</Text>
+    <Text accessibilityRole="header" style={[styles.title, style]} {...rest}>
       {children}
-    </View>
+    </Text>
   );
+}
+
+/** Small uppercase label above a section. */
+export function Eyebrow({ children, style }: { children: ReactNode; style?: StyleProp<TextStyle> }) {
+  return <Text style={[styles.eyebrow, style]}>{children}</Text>;
 }
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: 50,
-    borderRadius: 14,
+    minHeight: 54,
+    borderRadius: radii.pill,
+    paddingHorizontal: 24,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 20,
+    gap: 8,
   },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '600',
+  primary: {
+    backgroundColor: colors.coral,
+    shadowColor: colors.coral,
+    shadowOpacity: 0.35,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 6 },
   },
-  chip: {
-    borderRadius: 999,
+  ghost: {
+    backgroundColor: colors.glass,
     borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    borderColor: colors.border,
   },
-  chipText: {
-    fontSize: 14,
-    fontWeight: '500',
+  inactive: { opacity: 0.45 },
+  buttonText: { fontSize: 16, fontWeight: '700', letterSpacing: 0.2 },
+  iconButton: {
+    borderRadius: radii.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.glass,
+    borderWidth: 1,
+    borderColor: colors.hairline,
   },
-  section: {
-    gap: 10,
+  title: {
+    fontFamily: fonts.display,
+    fontSize: 34,
+    lineHeight: 40,
+    color: colors.text,
+    letterSpacing: -0.5,
   },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: '600',
+  eyebrow: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1.4,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    color: colors.coral,
   },
 });
+

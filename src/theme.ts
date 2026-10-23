@@ -1,36 +1,47 @@
-import { useColorScheme } from 'react-native';
+// Limpet design tokens. The brand palette is four colors; everything else is derived from them.
+// The app is intentionally dark-only: it lives "under water", like the limpet on its rock.
 
-const light = {
-  background: '#F4F5F7',
-  surface: '#FFFFFF',
-  text: '#0F172A',
-  textMuted: '#64748B',
-  border: '#E2E8F0',
-  accent: '#0D9488',
-  accentText: '#FFFFFF',
-  danger: '#DC2626',
-  // The preview mimics the lock screen, which is always dark-tinted.
-  lockCard: '#1E293B',
-  lockCardText: '#F8FAFC',
-  lockCardAccent: '#2DD4BF',
-};
+export const palette = {
+  abyss: '#0F3040',
+  slate: '#464858',
+  clay: '#A56F63',
+  coral: '#D99B7F',
+} as const;
 
-const dark: typeof light = {
-  background: '#0B1120',
-  surface: '#111827',
-  text: '#F1F5F9',
-  textMuted: '#94A3B8',
-  border: '#1F2937',
-  accent: '#2DD4BF',
-  accentText: '#042F2E',
-  danger: '#F87171',
-  lockCard: '#1E293B',
-  lockCardText: '#F8FAFC',
-  lockCardAccent: '#2DD4BF',
-};
+export const colors = {
+  /** Abyss pushed ~55% toward black: the screen background. */
+  bg: '#061821',
+  /** Bottom of the background gradient, almost black. */
+  bgDeep: '#030D13',
+  /** The brand abyss, lifted one step above the background: sheets, tab bar. */
+  surface: palette.abyss,
+  /** Translucent cards floating over the animated background. */
+  glass: 'rgba(15, 48, 64, 0.55)',
+  glassStrong: 'rgba(15, 48, 64, 0.85)',
+  border: 'rgba(217, 155, 127, 0.22)',
+  hairline: 'rgba(255, 255, 255, 0.08)',
+  /** Primary text: warm white, the brand's light counterpart to the abyss. */
+  text: '#FFFFFF',
+  /** Body text on dark: white with a hint of coral. */
+  textSoft: '#F4E9E2',
+  /** Secondary text; slate lifted for 6:1 contrast on the background. */
+  textMuted: '#A7ACBE',
+  textFaint: '#7A8094',
+  coral: palette.coral,
+  clay: palette.clay,
+  slate: palette.slate,
+  onCoral: '#061821',
+  danger: '#F08A7A',
+} as const;
 
-export type Theme = typeof light;
+export const fonts = {
+  display: 'Fraunces_600SemiBold',
+  displayBold: 'Fraunces_700Bold',
+  serif: 'Fraunces_400Regular',
+  serifMedium: 'Fraunces_500Medium',
+  serifItalic: 'Fraunces_400Regular_Italic',
+} as const;
 
-export function useTheme(): Theme {
-  return useColorScheme() === 'dark' ? dark : light;
-}
+export const radii = { sm: 12, md: 18, lg: 28, pill: 999 } as const;
+
+export const space = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 } as const;

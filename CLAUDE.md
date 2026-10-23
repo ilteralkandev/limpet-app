@@ -37,6 +37,19 @@ src/live-activity/index.ios.ts → FactActivity.ios.tsx (expo-widgets createLive
 - UI otomasyonu için `axe` (Homebrew) kurulu: `axe describe-ui`, `axe tap --label`, `axe swipe`. `axe button lock` ekranı kilitlemez; kartı görmek için ana ekrandayken üstten aşağı kaydır (`axe swipe --start-y 2 --end-y 600`).
 - Kart çizilmiyor gibi görünürse önce etkinliğin kayıtlı olduğunu doğrula: `xcrun simctl spawn <udid> log show --last 2m --predicate 'process == "Limpet" AND eventMessage CONTAINS "Activities changed"'`.
 
+## Tasarım
+
+- Uygulama yalnızca koyu temadır (`userInterfaceStyle: dark`). Renkler tek yerde: `src/theme.ts`. Marka paleti `palette` (abyss/slate/clay/coral), türetilmiş tonlar `colors`; bileşenlerde sabit renk yazılmaz. Metin beyazdır, vurgular coral.
+- Arka plan `src/components/Ocean.tsx` (dalgalar, parçacıklar) kök `_layout.tsx`'te bir kez çizilir; navigator'lar bu yüzden şeffaf tema (`ThemeProvider` + `contentStyle`/`sceneStyle: transparent`) kullanır. Bir ekrana opak arka plan verilirse okyanus kapanır.
+- Maskot deniz kabuğudur: uygulamada `Shell.tsx` (SVG), kilit ekranında `assets/mascot/shell.png`. Kaynak `assets/mascot/shell.svg`; PNG/ikon/splash dosyaları bu SVG'den `sharp` ile üretildi (repoda yalnızca çıktılar var). SVG değişirse hepsi yeniden üretilmeli.
+- Kilit ekranı kartında **sayaç/ilerleme çubuğu yoktur**; geri sayım yalnızca uygulama içinde (`TideBar`). Widget tarafına zaman bilgisi geçirilmez.
+- Widget süreci uygulama paketini göremez: kabuk PNG'si `widgetsDirectory`'ye bir kez kopyalanır (`live-activity/mascot.ios.ts`) ve `file://` adresi props ile `Image uiImage`'a verilir. Dosya adındaki `-v1` görseli değiştirince artırılır, yoksa eski kopya kalır.
+
+## Geliştirme sunucusu
+
+- Metro'yu **`CI=1` olmadan** başlat (`npx expo start --dev-client`). `CI=1` izleme modunu kapatır: yeni/değişen dosyalar uygulamaya ulaşmaz, "Unable to resolve module" ve eski ekranlar görülür.
+- Yeni native modül (ör. `expo-file-system`) eklenince `npx expo prebuild --platform ios --clean` ve yeniden derleme gerekir; Metro yenilemesi yetmez.
+
 ## İçerik (veri setleri)
 
 - Şema: `src/lib/content/types.ts`. Paket `id`/`title`/`symbol`/`version` katalogla birebir aynı olmalı; `symbol` bir SF Symbol adıdır.
