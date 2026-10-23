@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "topics": [
+    {
+      "id": "software",
+      "title": "Yazılım",
+      "description": "Programlama tarihi, ilkeler ve kavramlar",
+      "symbol": "chevron.left.forwardslash.chevron.right",
+      "file": "topics/software.json",
+      "version": 1,
+      "count": 12
+    },
+    {
+      "id": "finance",
+      "title": "Finans",
+      "description": "Kişisel finans, yatırım ve piyasa kavramları",
+      "symbol": "chart.line.uptrend.xyaxis",
+      "file": "topics/finance.json",
+      "version": 1,
+      "count": 12
+    },
+    {
+      "id": "philosophy",
+      "title": "Felsefe",
+      "description": "Düşünürler, akımlar ve düşünce deneyleri",
+      "symbol": "brain.head.profile",
+      "file": "topics/philosophy.json",
+      "version": 1,
+      "count": 12
+    },
+    {
+      "id": "science",
+      "title": "Bilim",
+      "description": "Fizik, biyoloji ve astronomiden kısa bilgiler",
+      "symbol": "atom",
+      "file": "topics/science.json",
+      "version": 1,
+      "count": 12
+    }
+  ]
+}

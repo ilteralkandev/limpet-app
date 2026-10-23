@@ -1,0 +1,11 @@
+# Optional: deploy content/ as a static site on Netlify.
+# Then set extra.contentBaseUrl in app.json to https://<site>.netlify.app
+[build]
+  publish = "content"
+  command = "node scripts/validate-content.mjs"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Cache-Control = "public, max-age=300"

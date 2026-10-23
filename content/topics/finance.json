@@ -1,0 +1,20 @@
+{
+  "id": "finance",
+  "title": "Finans",
+  "symbol": "chart.line.uptrend.xyaxis",
+  "version": 1,
+  "facts": [
+    { "id": "finance-001", "text": "72 Kuralı: 72'yi yıllık getiri oranına bölersen, paranın yaklaşık kaç yılda ikiye katlanacağını bulursun." },
+    { "id": "finance-002", "text": "Enflasyon %50 iken %40 faiz alıyorsan reel getirin yaklaşık %-6,7'dir: Paran büyür ama alım gücün küçülür." },
+    { "id": "finance-003", "text": "Çeşitlendirme: Birbiriyle düşük korelasyonlu varlıklar, portföy riskini beklenen getiriyle aynı oranda düşürmeden azaltabilir." },
+    { "id": "finance-004", "text": "Likidite, bir varlığın değer kaybetmeden hızla nakde çevrilebilmesidir; en likit varlık nakittir." },
+    { "id": "finance-005", "text": "Acil durum fonu için genellikle 3-6 aylık zorunlu gider tutarında birikim önerilir." },
+    { "id": "finance-006", "text": "F/K oranı, hisse fiyatının hisse başına kâra bölümüdür: Şirketin 1 liralık kârı için kaç lira ödendiğini gösterir." },
+    { "id": "finance-007", "text": "İlk modern borsa sayılan Amsterdam Borsası, 1602'de Hollanda Doğu Hindistan Şirketi hisseleriyle işlem görmeye başladı." },
+    { "id": "finance-008", "text": "Fırsat maliyeti: Bir seçim yaptığında vazgeçtiğin en iyi alternatifin değeridir." },
+    { "id": "finance-009", "text": "Endeks fonları piyasayı yenmeye çalışmaz, onu taklit eder; düşük masraf oranı uzun vadede getiride ciddi fark yaratır." },
+    { "id": "finance-010", "text": "Tahvil fiyatları ile faiz oranları ters yönde hareket eder: Faizler yükselince mevcut tahvillerin fiyatı düşer." },
+    { "id": "finance-011", "text": "Kayıptan kaçınma: İnsanlar bir kaybın acısını, eşit büyüklükteki bir kazancın sevincinden daha güçlü hisseder." },
+    { "id": "finance-012", "text": "Bileşik getiride zaman en güçlü değişkendir: Erken başlanan küçük birikimler, geç başlanan büyük birikimleri geçebilir." }
+  ]
+}

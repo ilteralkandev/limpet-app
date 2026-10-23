@@ -1,0 +1,20 @@
+{
+  "id": "philosophy",
+  "title": "Felsefe",
+  "symbol": "brain.head.profile",
+  "version": 1,
+  "facts": [
+    { "id": "philosophy-001", "text": "Sokrates hiçbir eser yazmadı; düşüncelerini büyük ölçüde öğrencisi Platon'un diyaloglarından biliyoruz." },
+    { "id": "philosophy-002", "text": "Descartes, 'Düşünüyorum, öyleyse varım' diyerek şüphe edilemeyecek tek kesinliği düşünen öznenin varlığında buldu." },
+    { "id": "philosophy-003", "text": "Ockham'ın Usturası: Bir olguyu açıklarken gereğinden fazla varsayıma başvurulmamalıdır." },
+    { "id": "philosophy-004", "text": "Epiktetos'a göre huzur, kontrolümüzde olanla olmayanı ayırmaktan doğar." },
+    { "id": "philosophy-005", "text": "Platon'un Mağara Alegorisi: Gölgeleri gerçek sanan insan, hakikati görmek için mağaradan çıkmak zorundadır." },
+    { "id": "philosophy-006", "text": "Kant'ın kategorik imperatifi: Yalnızca evrensel bir yasa olmasını isteyebileceğin ilkeye göre eylemde bulun." },
+    { "id": "philosophy-007", "text": "Herakleitos: Aynı nehirde iki kez yıkanamazsın; ne nehir ne de sen aynı kalırsın." },
+    { "id": "philosophy-008", "text": "Faydacılık (Bentham, Mill), bir eylemin doğruluğunu en çok kişiye en fazla mutluluğu sağlayıp sağlamadığıyla ölçer." },
+    { "id": "philosophy-009", "text": "Farabi, Aristoteles'ten sonra 'İkinci Öğretmen' (Muallim-i Sani) olarak anılır." },
+    { "id": "philosophy-010", "text": "Sartre: 'Varoluş özden önce gelir.' İnsan önce var olur, sonra seçimleriyle kendini tanımlar." },
+    { "id": "philosophy-011", "text": "Theseus'un Gemisi: Tüm parçaları zamanla değiştirilen bir gemi hâlâ aynı gemi midir?" },
+    { "id": "philosophy-012", "text": "Aristoteles'e göre erdem iki aşırılığın ortasıdır: Cesaret, korkaklık ile atılganlık arasında durur." }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "id": "software",
+  "title": "Yazılım",
+  "symbol": "chevron.left.forwardslash.chevron.right",
+  "version": 1,
+  "facts": [
+    { "id": "software-001", "text": "Git'te her commit, bir önceki commit'in hash'ini içerir; bu yüzden geçmişi iz bırakmadan değiştirmek mümkün değildir." },
+    { "id": "software-002", "text": "Bilinen ilk 'bug' kaydı 1947'de Harvard Mark II'nin bir rölesine sıkışan güvedir; ekip onu kayıt defterine yapıştırdı." },
+    { "id": "software-003", "text": "Big-O gösterimi, bir algoritmanın girdi büyüdükçe nasıl ölçeklendiğini anlatır: O(n log n) ile O(n²) arasındaki fark büyük veride devasadır." },
+    { "id": "software-004", "text": "JavaScript'in ilk prototipini Brendan Eich 1995'te yaklaşık 10 günde yazdı." },
+    { "id": "software-005", "text": "DRY (Don't Repeat Yourself): Her bilgi, sistemde tek ve yetkili bir yerde temsil edilmelidir." },
+    { "id": "software-006", "text": "HTTP 418 'I'm a teapot' kodu, 1998'de 1 Nisan şakası olarak RFC 2324 ile tanımlandı." },
+    { "id": "software-007", "text": "Unix zamanı 1 Ocak 1970'ten beri geçen saniyeleri sayar; işaretli 32-bit sayaçlar 19 Ocak 2038'de taşacak." },
+    { "id": "software-008", "text": "Conway Yasası: Sistemler, onları tasarlayan organizasyonun iletişim yapısını kopyalar." },
+    { "id": "software-009", "text": "Hash tablosunda arama ortalamada O(1)'dir; ama çakışmalar birikirse en kötü durumda O(n)'e düşebilir." },
+    { "id": "software-010", "text": "Ada Lovelace, 1843'te Analitik Makine için yazdığı notlarla ilk bilgisayar programı sayılan algoritmayı yayımladı." },
+    { "id": "software-011", "text": "\"Erken optimizasyon tüm kötülüklerin anasıdır.\" — Donald Knuth, 1974" },
+    { "id": "software-012", "text": "Python'un adı yılandan değil, Guido van Rossum'un sevdiği Monty Python komedi grubundan gelir." }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "id": "science",
+  "title": "Bilim",
+  "symbol": "atom",
+  "version": 1,
+  "facts": [
+    { "id": "science-001", "text": "Güneş'ten çıkan ışık Dünya'ya yaklaşık 8 dakika 20 saniyede ulaşır." },
+    { "id": "science-002", "text": "İki insanın DNA'sı yaklaşık %99,9 oranında aynıdır." },
+    { "id": "science-003", "text": "Bal, düşük nemi ve asidik yapısı sayesinde doğru saklanırsa binlerce yıl bozulmadan kalabilir." },
+    { "id": "science-004", "text": "Ahtapotların üç kalbi vardır; kanları bakır içeren hemosiyanin sayesinde mavidir." },
+    { "id": "science-005", "text": "Venüs'te bir gün (243 Dünya günü), Venüs'ün bir yılından (225 Dünya günü) daha uzundur." },
+    { "id": "science-006", "text": "Su en yoğun hâline yaklaşık 4 °C'de ulaşır; bu yüzden göller yüzeyden donar ve altındaki canlılar yaşar." },
+    { "id": "science-007", "text": "Muzlar doğal potasyum-40 içerdiği için çok hafif radyoaktiftir; bu düzey tamamen zararsızdır." },
+    { "id": "science-008", "text": "Işık yılı bir zaman değil uzaklık birimidir: Işığın bir yılda kat ettiği yaklaşık 9,46 trilyon km." },
+    { "id": "science-009", "text": "İnsan beyninde yaklaşık 86 milyar nöron bulunur." },
+    { "id": "science-010", "text": "Penisilin, 1928'de Alexander Fleming'in bir petri kabında üreyen küfü fark etmesiyle keşfedildi." },
+    { "id": "science-011", "text": "Ses boşlukta yayılamaz; titreşimleri taşıyacak hava, su ya da katı gibi bir ortam gerekir." },
+    { "id": "science-012", "text": "Elmas ve grafitin ikisi de saf karbondur; aradaki fark yalnızca atomların diziliş biçimidir." }
+  ]
+}
