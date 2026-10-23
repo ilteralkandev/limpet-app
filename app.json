@@ -44,7 +44,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "contentBaseUrl": "https://raw.githubusercontent.com/ilteralkandev/limpet-app/main/content"
+      "contentBaseUrl": "https://limpet-app.netlify.app"
     },
     "backgroundColor": "#0F3040"
   }

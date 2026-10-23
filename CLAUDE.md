@@ -55,7 +55,7 @@ src/live-activity/index.ios.ts → FactActivity.ios.tsx (expo-widgets createLive
 - Şema: `src/lib/content/types.ts`. Paket `id`/`title`/`symbol`/`version` katalogla birebir aynı olmalı; `symbol` bir SF Symbol adıdır.
 - Bir paketi değiştirince hem `topics/<id>.json` hem `index.json`'daki `version` artırılır; cihazlar yalnızca daha yüksek sürümü indirir. Bilgi metni en fazla 160 karakter (kilit ekranında 3 satır).
 - Yeni konu: `topics/<id>.json` ekle + `index.json`'a girdi ekle → `npm run content:validate`.
-- Üretim adresi `app.json → extra.contentBaseUrl` (Netlify sitesi); yerelde `EXPO_PUBLIC_CONTENT_BASE_URL=http://localhost:4000` ile `npm run content:serve` kullanılır.
+- Üretim adresi `app.json → extra.contentBaseUrl` = `https://limpet-app.netlify.app` (Netlify, `main`'e bağlı); yerelde `EXPO_PUBLIC_CONTENT_BASE_URL=http://localhost:4000` ile `npm run content:serve` kullanılır.
 - Yayın `netlify.toml` ile yönetilir: `content/` yayınlanır, önce `content:validate` çalışır (bozuk paket yayına çıkmaz), yalnızca `content/`, doğrulama script'i veya `netlify.toml` değişince yeniden yayınlanır. Önbellek 5 dk; yeni sürüm cihazlara birkaç dakikada ulaşır.
 - İçeriği yayınlamak = `main`'e push. Uygulamanın yeni sürüm indirmesi için paket ve `index.json`'daki `version` artırılmış olmalı.
 
