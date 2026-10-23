@@ -1,11 +1,21 @@
-# Optional: deploy content/ as a static site on Netlify.
-# Then set extra.contentBaseUrl in app.json to https://<site>.netlify.app
+# Hosts content/ as a static site; the app downloads topic packs from here.
+# Production URL goes into app.json → extra.contentBaseUrl.
+
 [build]
   publish = "content"
+  # A broken pack must never reach users: the deploy fails if validation fails.
   command = "node scripts/validate-content.mjs"
+  # Exit 0 = skip the build. Redeploy only when content or its tooling changed,
+  # so app-code pushes don't create deploys. (First deploy has no cached ref and always builds.)
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- content scripts/validate-content.mjs netlify.toml"
+
+[build.environment]
+  # validate-content.mjs uses import.meta.dirname (Node 20.11+).
+  NODE_VERSION = "22"
 
 [[headers]]
   for = "/*"
   [headers.values]
     Access-Control-Allow-Origin = "*"
+    # Short cache so a new pack version reaches devices within minutes.
     Cache-Control = "public, max-age=300"
