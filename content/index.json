@@ -7,8 +7,8 @@
       "description": "Programlama tarihi, ilkeler ve kavramlar",
       "symbol": "chevron.left.forwardslash.chevron.right",
       "file": "topics/software.json",
-      "version": 2,
-      "count": 14
+      "version": 3,
+      "count": 100
     },
     {
       "id": "finance",
@@ -16,17 +16,17 @@
       "description": "Kişisel finans, yatırım ve piyasa kavramları",
       "symbol": "chart.line.uptrend.xyaxis",
       "file": "topics/finance.json",
-      "version": 2,
-      "count": 14
+      "version": 3,
+      "count": 100
     },
     {
       "id": "philosophy",
       "title": "Felsefe",
       "description": "Düşünürler, akımlar ve düşünce deneyleri",
-      "symbol": "brain.head.profile",
+      "symbol": "lightbulb",
       "file": "topics/philosophy.json",
-      "version": 2,
-      "count": 14
+      "version": 4,
+      "count": 100
     },
     {
       "id": "science",
@@ -34,8 +34,134 @@
       "description": "Fizik, biyoloji ve astronomiden kısa bilgiler",
       "symbol": "atom",
       "file": "topics/science.json",
-      "version": 2,
-      "count": 14
+      "version": 3,
+      "count": 100
+    },
+    {
+      "id": "history",
+      "title": "Tarih",
+      "description": "Az bilinen olaylar, kişiler ve garip detaylar",
+      "symbol": "hourglass",
+      "file": "topics/history.json",
+      "version": 1,
+      "count": 100
+    },
+    {
+      "id": "space",
+      "title": "Uzay",
+      "description": "Gezegenler, yıldızlar ve evrenin tuhaflıkları",
+      "symbol": "moon.stars",
+      "file": "topics/space.json",
+      "version": 1,
+      "count": 100
+    },
+    {
+      "id": "nature",
+      "title": "Doğa ve Hayvanlar",
+      "description": "Canlıların şaşırtıcı yetenekleri ve alışkanlıkları",
+      "symbol": "pawprint",
+      "file": "topics/nature.json",
+      "version": 1,
+      "count": 100
+    },
+    {
+      "id": "body",
+      "title": "İnsan Vücudu",
+      "description": "Bedenimizin bilmediğimiz çalışma biçimleri",
+      "symbol": "lungs",
+      "file": "topics/body.json",
+      "version": 1,
+      "count": 100
+    },
+    {
+      "id": "psychology",
+      "title": "Psikoloji",
+      "description": "Zihnin kısayolları, yanılgıları ve ünlü deneyler",
+      "symbol": "brain",
+      "file": "topics/psychology.json",
+      "version": 1,
+      "count": 100
+    },
+    {
+      "id": "geography",
+      "title": "Coğrafya",
+      "description": "Ülkeler, sınırlar ve yeryüzünün garipliği",
+      "symbol": "globe.europe.africa",
+      "file": "topics/geography.json",
+      "version": 1,
+      "count": 100
+    },
+    {
+      "id": "math",
+      "title": "Matematik",
+      "description": "Sayıların ve ispatların şaşırtan tarafı",
+      "symbol": "function",
+      "file": "topics/math.json",
+      "version": 1,
+      "count": 100
+    },
+    {
+      "id": "language",
+      "title": "Dil ve Kelimeler",
+      "description": "Kelime kökenleri, alfabeler ve dil tuhaflıkları",
+      "symbol": "character.bubble",
+      "file": "topics/language.json",
+      "version": 1,
+      "count": 100
+    },
+    {
+      "id": "art",
+      "title": "Sanat",
+      "description": "Ressamlar, eserler ve sanat dünyasından hikâyeler",
+      "symbol": "paintpalette",
+      "file": "topics/art.json",
+      "version": 1,
+      "count": 100
+    },
+    {
+      "id": "music",
+      "title": "Müzik",
+      "description": "Besteciler, enstrümanlar ve müziğin bilimi",
+      "symbol": "music.note",
+      "file": "topics/music.json",
+      "version": 1,
+      "count": 100
+    },
+    {
+      "id": "sports",
+      "title": "Spor",
+      "description": "Rekorlar, kurallar ve sahadan unutulmaz anlar",
+      "symbol": "figure.run",
+      "file": "topics/sports.json",
+      "version": 1,
+      "count": 100
+    },
+    {
+      "id": "law",
+      "title": "Hukuk",
+      "description": "Hukukun tarihi, ilginç davalar ve kavramlar",
+      "symbol": "scalemass",
+      "file": "topics/law.json",
+      "version": 1,
+      "count": 100
+    },
+    {
+      "id": "general",
+      "title": "Genel Kültür",
+      "description": "Vikipedi'nin seçtiği şaşırtıcı bilgiler",
+      "symbol": "sparkles",
+      "file": "topics/general.json",
+      "version": 1,
+      "count": 325
+    },
+    {
+      "id": "today",
+      "title": "Tarihte Bugün",
+      "description": "Takvimdeki günün geçmişten olayları",
+      "symbol": "calendar",
+      "file": "topics/today.json",
+      "version": 1,
+      "count": 1098
     }
   ]
 }

@@ -19,6 +19,7 @@ import { readJSON, writeJSON } from '@/lib/storage';
 import { cancelBackgroundRotation, scheduleBackgroundRotation } from '@/tasks/rotate-task';
 
 const ROTATION_KEY = 'rotation:v1';
+const DECK_SEED_KEY = 'deck:seed';
 const CONTENT_CHECKED_AT_KEY = 'content:checkedAt';
 // New packs reach users within this window after being published.
 const CONTENT_CHECK_INTERVAL_MS = 6 * 60 * 60_000;
@@ -42,13 +43,22 @@ type RotateOptions = {
   refreshLockScreen?: boolean;
 };
 
+/** Per-install seed so every device walks the facts in its own order. Created once. */
+async function deckSeed(): Promise<number> {
+  const stored = await readJSON<number>(DECK_SEED_KEY);
+  if (stored) return stored;
+  const seed = Math.floor(Math.random() * 2 ** 31) + 1;
+  await writeJSON(DECK_SEED_KEY, seed);
+  return seed;
+}
+
 /**
  * Advances to the next card when its interval has passed (or when forced),
  * then makes sure the lock screen shows the current card. Offline-only.
  */
 export async function rotate({ force = false, refreshLockScreen = false }: RotateOptions = {}): Promise<Snapshot> {
   const prefs = await loadPreferences();
-  const deck = buildDeck(await loadCachedPacks(prefs.topicIds));
+  const deck = buildDeck(await loadCachedPacks(prefs.topicIds), await deckSeed());
   let rotation = (await readJSON<RotationState>(ROTATION_KEY)) ?? INITIAL_ROTATION;
   const now = Date.now();
 

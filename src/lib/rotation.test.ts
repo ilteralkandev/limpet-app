@@ -18,6 +18,19 @@ describe('buildDeck', () => {
     assert.deepEqual(ids, ['a-0', 'b-0', 'a-1', 'a-2']);
   });
 
+  it('shuffles per seed, deterministically, without losing facts', () => {
+    const a = buildDeck([pack('a', 20), pack('b', 20)], 7).map((c) => c.factId);
+    assert.deepEqual(a, buildDeck([pack('a', 20), pack('b', 20)], 7).map((c) => c.factId));
+    assert.notDeepEqual(a, buildDeck([pack('a', 20), pack('b', 20)]).map((c) => c.factId));
+    assert.equal(new Set(a).size, 40);
+  });
+
+  it('keeps the relative order of old facts when a pack grows', () => {
+    const before = buildDeck([pack('a', 10)], 7).map((c) => c.factId);
+    const after = buildDeck([pack('a', 15)], 7).map((c) => c.factId).filter((id) => before.includes(id));
+    assert.deepEqual(after, before);
+  });
+
   it('is empty without packs', () => {
     assert.deepEqual(buildDeck([]), []);
   });

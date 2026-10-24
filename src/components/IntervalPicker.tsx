@@ -8,11 +8,9 @@ import { colors, fonts, radii } from '@/theme';
 
 // A personality for each rhythm, so the choice feels like picking a pace, not a number.
 const MOODS: Record<number, { name: string; hint: string }> = {
-  15: { name: 'Meraklı', hint: 'Gün boyu sürekli yeni bilgi' },
-  30: { name: 'Hevesli', hint: 'Yarım saatte bir taze bir cümle' },
-  60: { name: 'Dengeli', hint: 'Saatte bir, göz yormadan' },
-  180: { name: 'Sakin', hint: 'Günde birkaç küçük durak' },
-  360: { name: 'Ara sıra', hint: 'Sabah, öğle, akşam' },
+  60: { name: 'Meraklı', hint: 'Gün boyu taze bilgiler' },
+  180: { name: 'Dengeli', hint: 'Günde birkaç küçük durak' },
+  360: { name: 'Sakin', hint: 'Sabah, öğle, akşam' },
 };
 
 export function IntervalPicker({ value, onChange }: { value: number; onChange: (minutes: number) => void }) {

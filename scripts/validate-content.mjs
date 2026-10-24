@@ -8,6 +8,7 @@ const ROOT = join(import.meta.dirname, '..', 'content');
 const MAX_FACT_LENGTH = 160;
 
 const errors = [];
+const seenTexts = new Map();
 const readJSON = (path) => JSON.parse(readFileSync(join(ROOT, path), 'utf8'));
 
 const manifest = readJSON('index.json');
@@ -39,6 +40,9 @@ for (const topic of manifest.topics) {
   for (const fact of pack.facts) {
     if (factIds.has(fact.id)) errors.push(`${topic.file}: duplicate fact id ${fact.id}`);
     factIds.add(fact.id);
+    const key = typeof fact.text === 'string' ? fact.text.trim().toLowerCase() : '';
+    if (key && seenTexts.has(key)) errors.push(`${topic.file}: ${fact.id} duplicates ${seenTexts.get(key)}`);
+    else if (key) seenTexts.set(key, fact.id);
     if (typeof fact.text !== 'string' || !fact.text.trim()) errors.push(`${topic.file}: ${fact.id} has empty text`);
     else if (fact.text.length > MAX_FACT_LENGTH) errors.push(`${topic.file}: ${fact.id} is ${fact.text.length} chars (max ${MAX_FACT_LENGTH})`);
   }

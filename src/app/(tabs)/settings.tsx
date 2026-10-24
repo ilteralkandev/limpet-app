@@ -153,6 +153,9 @@ export default function SettingsScreen() {
                 ? `${update.downloaded ? `${update.downloaded} paket güncellendi` : 'Paketler güncel'} · son kontrol ${relativeTime(update.at, now)}`
                 : 'Yeni bilgiler yayınlandığında paketler kendiliğinden güncellenir (en fazla 6 saatte bir). Şimdi kontrol etmek için:'}
             </Text>
+            <Text style={styles.muted}>
+              Uygulamanın ilk sürümlerinde bilgi sayısı sınırlıdır; yeni bilgiler eklendikçe konular genişleyecek.
+            </Text>
             <Button
               title="Paketleri güncelle"
               variant="ghost"
@@ -170,6 +173,9 @@ export default function SettingsScreen() {
           <ShellMark size={56} />
           <Text style={styles.footerText}>
             Limpet {Constants.expoConfig?.version} · kayaya tutunan bilgiler
+          </Text>
+          <Text style={styles.credit}>
+            Bazı bilgiler Vikipedi’den alınmıştır (CC BY-SA 4.0): “Genel Kültür” ve “Tarihte Bugün” konuları.
           </Text>
         </View>
       </ScrollView>
@@ -227,5 +233,6 @@ const styles = StyleSheet.create({
   error: { color: colors.danger, fontSize: 13.5, textAlign: 'center' },
   footer: { alignItems: 'center', gap: 10, paddingTop: 8, opacity: 0.8 },
   footerText: { fontFamily: fonts.serifItalic, fontSize: 13, color: colors.textFaint },
+  credit: { fontSize: 11, lineHeight: 15, textAlign: 'center', color: colors.textFaint, paddingHorizontal: 24 },
   saveBar: { position: 'absolute', left: 20, right: 20 },
 });

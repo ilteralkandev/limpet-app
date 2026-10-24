@@ -13,7 +13,7 @@ type TopicGridProps = {
   onToggle: (id: string) => void;
 };
 
-/** Two-column grid of topic tiles; selected tiles glow coral and get a check badge. */
+/** Compact two-column grid (16 topics fit without long scrolling); selected tiles glow coral and get a check badge. */
 export function TopicGrid({ topics, selected, onToggle }: TopicGridProps) {
   return (
     <View style={styles.grid}>
@@ -24,7 +24,7 @@ export function TopicGrid({ topics, selected, onToggle }: TopicGridProps) {
             key={topic.id}
             accessibilityRole="checkbox"
             accessibilityState={{ checked: on }}
-            accessibilityLabel={`${topic.title}, ${topic.count} bilgi`}
+            accessibilityLabel={topic.title}
             onPress={() => onToggle(topic.id)}
             style={[styles.tile, on && styles.tileOn]}>
             <View style={[styles.icon, on && styles.iconOn]}>
@@ -35,11 +35,9 @@ export function TopicGrid({ topics, selected, onToggle }: TopicGridProps) {
                 weight="medium"
               />
             </View>
-            <Text style={styles.title}>{topic.title}</Text>
-            <Text style={styles.description} numberOfLines={2}>
-              {topic.description}
+            <Text style={styles.title} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+              {topic.title}
             </Text>
-            <Text style={styles.count}>{topic.count} bilgi</Text>
             {on ? (
               <Animated.View entering={ZoomIn.springify().damping(12)} exiting={ZoomOut.duration(150)} style={styles.check}>
                 <SymbolView name="checkmark" size={11} tintColor={colors.onCoral} weight="bold" />
@@ -57,8 +55,9 @@ const styles = StyleSheet.create({
   tile: {
     width: '48%',
     flexGrow: 1,
-    padding: 16,
-    gap: 6,
+    flexBasis: '45%',
+    padding: 14,
+    gap: 4,
     borderRadius: radii.md,
     backgroundColor: colors.glass,
     borderWidth: 1.5,
@@ -66,18 +65,16 @@ const styles = StyleSheet.create({
   },
   tileOn: { borderColor: colors.coral, backgroundColor: 'rgba(217, 155, 127, 0.12)' },
   icon: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: 40,
+    height: 40,
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(217, 155, 127, 0.12)',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   iconOn: { backgroundColor: colors.coral },
-  title: { fontFamily: fonts.display, fontSize: 19, color: colors.text },
-  description: { fontSize: 12.5, lineHeight: 17, color: colors.textMuted },
-  count: { fontSize: 11, fontWeight: '700', color: colors.textFaint, letterSpacing: 0.6, marginTop: 4 },
+  title: { fontFamily: fonts.display, fontSize: 18, color: colors.text },
   check: {
     position: 'absolute',
     top: 12,

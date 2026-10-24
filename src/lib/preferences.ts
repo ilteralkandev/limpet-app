@@ -6,10 +6,7 @@ export type Preferences = {
   lockScreenEnabled: boolean;
 };
 
-// iOS background tasks cannot run more often than every 15 minutes.
 export const INTERVAL_OPTIONS = [
-  { minutes: 15, label: '15 dk' },
-  { minutes: 30, label: '30 dk' },
   { minutes: 60, label: '1 saat' },
   { minutes: 180, label: '3 saat' },
   { minutes: 360, label: '6 saat' },
@@ -25,7 +22,10 @@ const KEY = 'prefs:v1';
 
 export async function loadPreferences(): Promise<Preferences> {
   const stored = await readJSON<Partial<Preferences>>(KEY);
-  return { ...DEFAULT_PREFERENCES, ...stored };
+  const prefs = { ...DEFAULT_PREFERENCES, ...stored };
+  // Older versions offered 15/30 minutes; snap anything unknown to the shortest current option.
+  if (!INTERVAL_OPTIONS.some((o) => o.minutes === prefs.intervalMinutes)) prefs.intervalMinutes = INTERVAL_OPTIONS[0].minutes;
+  return prefs;
 }
 
 export async function savePreferences(prefs: Preferences): Promise<void> {

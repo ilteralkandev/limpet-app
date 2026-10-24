@@ -4,9 +4,11 @@ import { useEffect } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { GestureDetector, usePanGesture, useSimultaneousGestures, useTapGesture } from 'react-native-gesture-handler';
 import Animated, {
+  Easing,
   interpolate,
   useAnimatedStyle,
   useSharedValue,
+  withDelay,
   withSequence,
   withSpring,
   withTiming,
@@ -75,7 +77,14 @@ export function FactCard({ card, position, deckSize, shownAt, nextAt, onSwiped, 
     numberOfTaps: 2,
     onActivate: () => {
       'worklet';
-      heart.set(withSequence(withSpring(1, { damping: 6, stiffness: 260 }), withTiming(0, { duration: 380 })));
+      // Quick pop, short hold, fade: about 0.6 s in total. A spring here keeps bouncing for
+      // over a second before the fade can even start.
+      heart.set(
+        withSequence(
+          withTiming(1, { duration: 160, easing: Easing.out(Easing.back(2)) }),
+          withDelay(220, withTiming(0, { duration: 240 })),
+        ),
+      );
       scheduleOnRN(onDoubleTap);
     },
   });

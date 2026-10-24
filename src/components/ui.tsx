@@ -118,9 +118,9 @@ export function Title({ children, style, ...rest }: TextProps & { children: Reac
   );
 }
 
-/** Small uppercase label above a section. */
-export function Eyebrow({ children, style }: { children: ReactNode; style?: StyleProp<TextStyle> }) {
-  return <Text style={[styles.eyebrow, style]}>{children}</Text>;
+/** Small lowercase label above a section. Turkish casing keeps "İ" → "i" and "I" → "ı" correct. */
+export function Eyebrow({ children, style }: { children: string; style?: StyleProp<TextStyle> }) {
+  return <Text style={[styles.eyebrow, style]}>{children.toLocaleLowerCase('tr-TR')}</Text>;
 }
 
 const styles = StyleSheet.create({
@@ -165,8 +165,7 @@ const styles = StyleSheet.create({
   eyebrow: {
     fontSize: 12,
     fontWeight: '700',
-    letterSpacing: 1.4,
-    textTransform: 'uppercase',
+    letterSpacing: 0.4,
     color: colors.coral,
   },
 });
