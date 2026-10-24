@@ -53,3 +53,13 @@ if (errors.length) {
   process.exit(1);
 }
 console.log(`✓ ${manifest.topics.length} topics valid`);
+
+// The legal pages are public App Store documents: shout (without blocking content deploys)
+// if the developer/contact placeholders were never filled in.
+import { readdirSync as listDir, readFileSync as readFile } from 'node:fs';
+const legalDir = new URL('../content/legal/', import.meta.url);
+for (const file of listDir(legalDir).filter((f) => f.endsWith('.html'))) {
+  if (/\[(İLETİŞİM E-POSTASI|GELİŞTİRİCİ ADI[^\]]*)\]/.test(readFile(new URL(file, legalDir), 'utf8'))) {
+    console.warn(`! legal/${file} still has [placeholders]: fill in the developer name and contact e-mail before the App Store release`);
+  }
+}

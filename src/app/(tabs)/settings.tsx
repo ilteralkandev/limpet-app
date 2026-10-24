@@ -1,9 +1,10 @@
 import Constants from 'expo-constants';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Linking, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { CONTENT_BASE_URL } from '@/config';
 import { IntervalPicker } from '@/components/IntervalPicker';
 import { ShellMark } from '@/components/Shell';
 import { TAB_BAR_CLEARANCE } from '@/components/TabBar';
@@ -19,6 +20,12 @@ import { useAppState } from '@/state/app-state';
 import { colors, fonts, radii } from '@/theme';
 
 const sameSet = (a: string[], b: string[]) => a.length === b.length && a.every((x) => b.includes(x));
+
+const LEGAL_LINKS = [
+  { label: 'Gizlilik Politikası', path: 'privacy.html' },
+  { label: 'Kullanım Koşulları', path: 'terms.html' },
+  { label: 'Destek', path: 'support.html' },
+] as const;
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
@@ -216,6 +223,18 @@ export default function SettingsScreen() {
 
         {saveError ? <Text style={styles.error}>{saveError}</Text> : null}
 
+        <View style={styles.legalRow}>
+          {LEGAL_LINKS.map((link) => (
+            <Pressable
+              key={link.path}
+              accessibilityRole="link"
+              hitSlop={8}
+              onPress={() => Linking.openURL(`${CONTENT_BASE_URL}/legal/${link.path}`)}>
+              <Text style={styles.legalLink}>{link.label}</Text>
+            </Pressable>
+          ))}
+        </View>
+
         <View style={styles.footer}>
           <ShellMark size={56} />
           <Text style={styles.footerText}>
@@ -283,6 +302,8 @@ const styles = StyleSheet.create({
   error: { color: colors.danger, fontSize: 13.5, textAlign: 'center' },
   footer: { alignItems: 'center', gap: 10, paddingTop: 8, opacity: 0.8 },
   footerText: { fontFamily: fonts.serifItalic, fontSize: 13, color: colors.textFaint },
+  legalRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 18, paddingTop: 8 },
+  legalLink: { fontSize: 13, color: colors.coral, textDecorationLine: 'underline' },
   credit: { fontSize: 11, lineHeight: 15, textAlign: 'center', color: colors.textFaint, paddingHorizontal: 24 },
   saveBar: { position: 'absolute', left: 20, right: 20 },
 });

@@ -38,6 +38,10 @@ src/live-activity/index.ios.ts → FactActivity.ios.tsx (expo-widgets createLive
 - Ada görünümünü simülatörde ekran görüntüsüyle doğrulayamadık (simülatör adayı ana ekranda çizmiyor); kilit ekranı tarafı doğrulandı.
 - `axe tap` ile `Switch` açmak için `--tap-style physical` gerekir; varsayılan dokunuş anahtarı çevirmez.
 
+## Yayın hazırlığı
+
+- Mağaza yayın kılavuzu, metinler ve ret riskleri: `docs/app-store.md`. Yasal sayfalar `content/legal/*.html` (Netlify'da `/legal/...`), uygulamada Ayarlar altbilgisinden açılır; içlerindeki `[GELİŞTİRİCİ ADI…]`/`[İLETİŞİM E-POSTASI]` yer tutucuları doldurulmadan yayınlanmamalı (`content:validate` uyarır). `eas.json` EAS derleme/gönderim profillerini içerir. `assets/icon.png` alfa kanalsız olmalı (App Store reddeder); yeniden üretilirse `flatten` edilmeli.
+
 ## Performans notları
 
 - `rotate()` her 30 sn çalışır; bu yüzden ayrıştırılmış paketler bellekte tutulur (`content/cache.ts` `memory`), deste yalnızca girdileri değişince yeniden kurulur (`engine.ts` `deckFor`) ve `app-state.tsx` `sync` yalnızca değişen state'i günceller (sessiz bir dakikada ekranlar yeniden çizilmez). Paket yazan her yeni kod `memory`'yi de güncellemeli.
