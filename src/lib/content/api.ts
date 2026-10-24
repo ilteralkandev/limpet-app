@@ -1,7 +1,7 @@
 import { CONTENT_BASE_URL } from '@/config';
 
 import type { Manifest, TopicPack, TopicSummary } from './types';
-import { assertPackMatches, contentUrl } from './validate';
+import { contentUrl, sanitizePack, sanitizeTopics } from './validate';
 
 async function getJSON<T>(path: string, version: number | string): Promise<T> {
   if (!CONTENT_BASE_URL) throw new Error('İçerik adresi tanımlı değil (app.json → extra.contentBaseUrl).');
@@ -17,11 +17,10 @@ export async function fetchManifest(): Promise<Manifest> {
   if (manifest?.schemaVersion !== 1 || !Array.isArray(manifest.topics)) {
     throw new Error('Desteklenmeyen içerik kataloğu biçimi.');
   }
-  return manifest;
+  return { ...manifest, topics: sanitizeTopics(manifest.topics) };
 }
 
 export async function fetchTopicPack(topic: TopicSummary): Promise<TopicPack> {
   const pack = await getJSON<TopicPack>(topic.file, topic.version);
-  assertPackMatches(pack, topic);
-  return pack;
+  return sanitizePack(pack, topic);
 }

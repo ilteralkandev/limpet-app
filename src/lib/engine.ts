@@ -2,24 +2,33 @@
 // Used by the UI and by the background task, so it must not depend on React.
 import { hideFromLockScreen, isShownOnLockScreen, showOnLockScreen } from '@/live-activity';
 import { loadCachedPacks, loadManifest, pruneCachedPacks, syncPacks } from '@/lib/content/cache';
-import type { TopicSummary } from '@/lib/content/types';
+import type { TopicPack, TopicSummary } from '@/lib/content/types';
 import { recordShown } from '@/lib/library';
-import { loadPreferences, savePreferences, type Preferences } from '@/lib/preferences';
+import { isLiveActive, loadPreferences, savePreferences, surfaces, type Preferences } from '@/lib/preferences';
 import {
   advance,
   buildDeck,
   currentCard,
+  dueSteps,
   INITIAL_ROTATION,
-  isDue,
   nextUpdateAt,
+  planNotifications,
   type Card,
   type RotationState,
 } from '@/lib/rotation';
+import {
+  isQuietHour,
+  NOTIFICATION_LIMIT,
+  notificationsAllowed,
+  requestNotificationPermission,
+  scheduleNotifications,
+} from '@/lib/notifications';
 import { readJSON, writeJSON } from '@/lib/storage';
 import { cancelBackgroundRotation, scheduleBackgroundRotation } from '@/tasks/rotate-task';
 
 const ROTATION_KEY = 'rotation:v1';
 const DECK_SEED_KEY = 'deck:seed';
+const NOTIFICATION_PLAN_KEY = 'notifications:plan';
 const CONTENT_CHECKED_AT_KEY = 'content:checkedAt';
 // New packs reach users within this window after being published.
 const CONTENT_CHECK_INTERVAL_MS = 6 * 60 * 60_000;
@@ -43,6 +52,14 @@ type RotateOptions = {
   refreshLockScreen?: boolean;
 };
 
+// The deck is rebuilt only when its inputs change; rotate() runs every 30 s while the app is open.
+let deckMemo: { key: string; deck: Card[] } | null = null;
+function deckFor(packs: TopicPack[], seed: number): Card[] {
+  const key = `${seed}|${packs.map((p) => `${p.id}@${p.version}:${p.facts.length}`).join(',')}`;
+  if (deckMemo?.key !== key) deckMemo = { key, deck: buildDeck(packs, seed) };
+  return deckMemo.deck;
+}
+
 /** Per-install seed so every device walks the facts in its own order. Created once. */
 async function deckSeed(): Promise<number> {
   const stored = await readJSON<number>(DECK_SEED_KEY);
@@ -58,14 +75,18 @@ async function deckSeed(): Promise<number> {
  */
 export async function rotate({ force = false, refreshLockScreen = false }: RotateOptions = {}): Promise<Snapshot> {
   const prefs = await loadPreferences();
-  const deck = buildDeck(await loadCachedPacks(prefs.topicIds), await deckSeed());
+  const deck = deckFor(await loadCachedPacks(prefs.topicIds), await deckSeed());
   let rotation = (await readJSON<RotationState>(ROTATION_KEY)) ?? INITIAL_ROTATION;
   const now = Date.now();
 
   const factStillInDeck = deck.some((c) => c.factId === rotation.factId);
-  const advanced = deck.length > 0 && (force || !factStillInDeck || isDue(rotation, prefs.intervalMinutes, now));
+  // The deck is a timeline: one card per interval, even if the app was closed for some of them.
+  const steps = factStillInDeck ? dueSteps(rotation, prefs.intervalMinutes, now) : 1;
+  const advanced = deck.length > 0 && (force || !factStillInDeck || steps > 0);
   if (advanced) {
-    rotation = advance(deck, rotation, now);
+    const onTimeline = !force && factStillInDeck;
+    const shownAt = onTimeline ? rotation.shownAt + steps * prefs.intervalMinutes * 60_000 : now;
+    rotation = advance(deck, rotation, shownAt, onTimeline ? steps : 1);
     await writeJSON(ROTATION_KEY, rotation);
   }
 
@@ -85,6 +106,12 @@ export async function rotate({ force = false, refreshLockScreen = false }: Rotat
     lockScreenError = error instanceof Error ? error.message : String(error);
   }
 
+  try {
+    await syncNotifications(prefs, deck, rotation, now, advanced || refreshLockScreen);
+  } catch {
+    // Notifications are a bonus; never let them break the card.
+  }
+
   return {
     card: shown,
     shownAt: shown ? rotation.shownAt : null,
@@ -95,18 +122,38 @@ export async function rotate({ force = false, refreshLockScreen = false }: Rotat
   };
 }
 
+/** Reschedules only when the timeline moved, so the 30-second foreground poll stays cheap. */
+async function syncNotifications(
+  prefs: Preferences,
+  deck: Card[],
+  rotation: RotationState,
+  now: number,
+  changed: boolean,
+) {
+  const signature = prefs.notificationsEnabled
+    ? `${rotation.factId}:${rotation.shownAt}:${prefs.intervalMinutes}:${deck.length}`
+    : 'off';
+  if (!changed && (await readJSON<string>(NOTIFICATION_PLAN_KEY)) === signature) return;
+  const allowed = prefs.notificationsEnabled && (await notificationsAllowed());
+  const plan = allowed
+    ? planNotifications(deck, rotation, prefs.intervalMinutes, now, { limit: NOTIFICATION_LIMIT, isQuiet: isQuietHour })
+    : [];
+  await scheduleNotifications(plan);
+  await writeJSON(NOTIFICATION_PLAN_KEY, signature);
+}
+
 async function syncLockScreen(
   prefs: Preferences,
   card: Card | null,
   { changed, nextAt, position }: { changed: boolean; nextAt: number; position: string },
 ) {
-  if (!prefs.lockScreenEnabled || !card) {
+  if (!isLiveActive(prefs) || !card) {
     if (isShownOnLockScreen()) await hideFromLockScreen();
     return;
   }
   // Also restarts the activity after iOS ended it (Live Activities expire after ~8 hours).
   if (changed || !isShownOnLockScreen()) {
-    await showOnLockScreen(card, position, new Date(nextAt + STALE_GRACE_MS));
+    await showOnLockScreen(card, position, new Date(nextAt + STALE_GRACE_MS), surfaces(prefs));
   }
 }
 
@@ -148,16 +195,29 @@ export async function updateContentIfStale(): Promise<boolean> {
   }
 }
 
-/** Turns the lock screen card on/off without re-downloading content. */
-export async function setLockScreenEnabled(enabled: boolean): Promise<Snapshot> {
-  const prefs = { ...(await loadPreferences()), lockScreenEnabled: enabled };
+/** Turns the lock screen / Dynamic Island presentations on or off without re-downloading content. */
+export async function setSurfacesEnabled(
+  change: Partial<Pick<Preferences, 'lockScreenEnabled' | 'islandEnabled' | 'islandCapable'>>,
+): Promise<Snapshot> {
+  const prefs = { ...(await loadPreferences()), ...change };
   await savePreferences(prefs);
   await updateSchedule(prefs);
   return rotate({ refreshLockScreen: true });
 }
 
+/**
+ * Turns notifications on (asking iOS for permission) or off. Returns whether they ended up on:
+ * false when the user declined, in which case nothing is saved.
+ */
+export async function setNotificationsEnabled(enabled: boolean): Promise<{ enabled: boolean; snapshot: Snapshot }> {
+  const allowed = enabled ? await requestNotificationPermission() : false;
+  const prefs = { ...(await loadPreferences()), notificationsEnabled: enabled && allowed };
+  await savePreferences(prefs);
+  return { enabled: prefs.notificationsEnabled, snapshot: await rotate({ refreshLockScreen: true }) };
+}
+
 async function updateSchedule(prefs: Preferences) {
-  if (prefs.lockScreenEnabled && prefs.topicIds.length) {
+  if (isLiveActive(prefs) && prefs.topicIds.length) {
     await scheduleBackgroundRotation(prefs.intervalMinutes);
   } else {
     await cancelBackgroundRotation();

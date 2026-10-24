@@ -20,11 +20,12 @@ function formatRemaining(ms: number): string {
 
 /** The "tide": fills up until the next card arrives, like the lock screen bar. */
 export function TideBar({ shownAt, nextAt }: { shownAt: number; nextAt: number }) {
-  const now = useNow(1000);
+  // The bar moves a fraction of a pixel per second: ticking every 15 s keeps the JS thread idle.
+  const now = useNow(15_000);
   const progress = useSharedValue(progressAt(shownAt, nextAt, now));
 
   useEffect(() => {
-    progress.set(withTiming(progressAt(shownAt, nextAt, now), { duration: 900, easing: Easing.out(Easing.quad) }));
+    progress.set(withTiming(progressAt(shownAt, nextAt, now), { duration: 1200, easing: Easing.out(Easing.quad) }));
   }, [now, shownAt, nextAt, progress]);
 
   const fill = useAnimatedStyle(() => ({ width: `${progress.value * 100}%` }));

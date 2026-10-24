@@ -27,22 +27,34 @@ function hash(text: string): number {
 }
 
 /**
- * Interleaves topics round-robin so consecutive cards come from different topics.
- * With a seed, each topic's facts are shuffled per install; the order depends only on
- * (seed, fact id), so adding facts to a pack never reshuffles the ones already seen.
- * Seed 0 keeps the authored order.
+ * Mixes topics so nothing repeats in a visible pattern: each round takes one fact per topic,
+ * but the topic order within a round is shuffled per seed. Facts inside a topic are shuffled
+ * too; both orders depend only on (seed, ids), so a pack growing never reshuffles old facts.
+ * Seed 0 keeps the authored order (tests).
  */
 export function buildDeck(packs: TopicPack[], seed = 0): Card[] {
+  // Hash each key once (decorate-sort-undecorate): sorting 1,000 facts would otherwise hash ~20,000 times.
   const ordered = packs.map((pack) =>
-    seed ? [...pack.facts].sort((a, b) => hash(`${seed}:${a.id}`) - hash(`${seed}:${b.id}`)) : pack.facts,
+    seed
+      ? pack.facts
+          .map((fact) => ({ fact, key: hash(`${seed}:${fact.id}`) }))
+          .sort((a, b) => a.key - b.key)
+          .map((entry) => entry.fact)
+      : pack.facts,
   );
   const deck: Card[] = [];
   const longest = Math.max(0, ...ordered.map((facts) => facts.length));
   for (let i = 0; i < longest; i++) {
-    packs.forEach((pack, p) => {
+    // Only packs that still have a fact this round take part (the big ones run on alone later).
+    const round = ordered.flatMap((facts, p) => (facts.length > i ? [p] : []));
+    if (seed && round.length > 1) {
+      const keys = new Map(round.map((p) => [p, hash(`${seed}:${i}:${packs[p].id}`)]));
+      round.sort((a, b) => keys.get(a)! - keys.get(b)!);
+    }
+    for (const p of round) {
       const fact = ordered[p][i];
-      if (fact) deck.push({ factId: fact.id, text: fact.text, topicTitle: pack.title, symbol: pack.symbol });
-    });
+      if (fact) deck.push({ factId: fact.id, text: fact.text, topicTitle: packs[p].title, symbol: packs[p].symbol });
+    }
   }
   return deck;
 }
@@ -53,15 +65,51 @@ export function currentCard(deck: Card[], state: RotationState): Card | null {
 }
 
 export function isDue(state: RotationState, intervalMinutes: number, now: number): boolean {
-  if (state.factId == null) return true;
-  return now - state.shownAt >= intervalMinutes * 60_000 - DUE_TOLERANCE_MS;
+  return dueSteps(state, intervalMinutes, now) > 0;
 }
 
-/** Moves to the card after the current one; an unknown/removed fact restarts the deck. */
-export function advance(deck: Card[], state: RotationState, now: number): RotationState {
-  if (!deck.length) return { factId: null, shownAt: now };
+/**
+ * How many whole intervals have passed since the card was shown (0 = not due yet).
+ * The deck is a timeline: a card per interval, whether or not the app was open for it.
+ */
+export function dueSteps(state: RotationState, intervalMinutes: number, now: number): number {
+  if (state.factId == null) return 1;
+  return Math.max(0, Math.floor((now - state.shownAt + DUE_TOLERANCE_MS) / (intervalMinutes * 60_000)));
+}
+
+/**
+ * Moves `steps` cards forward and stamps the new card with `shownAt`; an unknown/removed
+ * fact restarts the deck at its first card.
+ */
+export function advance(deck: Card[], state: RotationState, shownAt: number, steps = 1): RotationState {
+  if (!deck.length) return { factId: null, shownAt };
   const index = deck.findIndex((c) => c.factId === state.factId);
-  return { factId: deck[(index + 1) % deck.length].factId, shownAt: now };
+  return { factId: deck[(index + steps) % deck.length].factId, shownAt };
+}
+
+export type PlannedNotification = { at: number; card: Card };
+
+/**
+ * The next cards on the timeline as local notifications: card k+1 after the current one is due
+ * k intervals after it was shown. Slots that `isQuiet` rejects (e.g. at night) are skipped, but
+ * their cards still pass, so the app and the notifications always agree on the position.
+ */
+export function planNotifications(
+  deck: Card[],
+  state: RotationState,
+  intervalMinutes: number,
+  now: number,
+  { limit = 60, isQuiet = (_at: Date) => false }: { limit?: number; isQuiet?: (at: Date) => boolean } = {},
+): PlannedNotification[] {
+  const start = deck.findIndex((c) => c.factId === state.factId);
+  if (start < 0) return [];
+  const planned: PlannedNotification[] = [];
+  for (let k = 1; planned.length < limit && k <= limit * 4; k++) {
+    const at = state.shownAt + k * intervalMinutes * 60_000;
+    if (at <= now || isQuiet(new Date(at))) continue;
+    planned.push({ at, card: deck[(start + k) % deck.length] });
+  }
+  return planned;
 }
 
 export function nextUpdateAt(state: RotationState, intervalMinutes: number): number {

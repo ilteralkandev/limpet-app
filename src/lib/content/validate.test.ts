@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import type { TopicPack, TopicSummary } from './types.ts';
-import { assertPackMatches, contentUrl } from './validate.ts';
+import { assertPackMatches, contentUrl, sanitizePack, sanitizeTopics } from './validate.ts';
 
 const topic: TopicSummary = {
   id: 'software',
@@ -43,5 +43,29 @@ describe('assertPackMatches', () => {
     assert.throws(() => assertPackMatches(pack({ id: 'finance' }), topic), /beklenen biçimde değil/);
     assert.throws(() => assertPackMatches(undefined, topic), /beklenen biçimde değil/);
     assert.throws(() => assertPackMatches({ ...pack(), facts: undefined } as unknown as TopicPack, topic));
+  });
+});
+
+describe('sanitizePack', () => {
+  it('drops malformed facts instead of letting them crash the app later', () => {
+    const bad = pack({ facts: [{ id: 'a', text: 'ok' }, { id: 'b', text: 42 }, { text: 'no id' }, null] as never });
+    assert.deepEqual(sanitizePack(bad, topic).facts, [{ id: 'a', text: 'ok' }]);
+  });
+
+  it('rejects packs without a single valid fact', () => {
+    assert.throws(() => sanitizePack(pack({ facts: [{ id: 'a', text: ' ' }] }), topic));
+  });
+
+  it('drops absurdly long facts', () => {
+    const facts = [{ id: 'a', text: 'ok' }, { id: 'b', text: 'x'.repeat(401) }];
+    assert.equal(sanitizePack(pack({ facts }), topic).facts.length, 1);
+  });
+});
+
+describe('sanitizeTopics', () => {
+  it('keeps catalog entries that point inside topics/ and drops the rest', () => {
+    const evil = { ...topic, id: 'evil', file: '../index.json' };
+    const broken = { id: 'broken' };
+    assert.deepEqual(sanitizeTopics([topic, evil, broken, null]), [topic]);
   });
 });

@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   FadeIn,
@@ -39,6 +39,10 @@ export default function OnboardingScreen() {
   const [catalog, setCatalog] = useState<TopicSummary[] | null>(null);
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [topicIds, setTopicIds] = useState<string[]>([]);
+  const toggleTopic = useCallback(
+    (id: string) => setTopicIds((ids) => (ids.includes(id) ? ids.filter((t) => t !== id) : [...ids, id])),
+    [],
+  );
   const [intervalMinutes, setIntervalMinutes] = useState(DEFAULT_PREFERENCES.intervalMinutes);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -115,7 +119,7 @@ export default function OnboardingScreen() {
                 <TopicGrid
                   topics={catalog}
                   selected={topicIds}
-                  onToggle={(id) => setTopicIds((ids) => (ids.includes(id) ? ids.filter((t) => t !== id) : [...ids, id]))}
+                  onToggle={toggleTopic}
                 />
               ) : catalogError ? (
                 <View style={styles.errorBox}>

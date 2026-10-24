@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 5,
     borderRadius: radii.pill,
-    backgroundColor: 'rgba(15, 48, 64, 0.96)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.hairline,
     shadowColor: '#000',

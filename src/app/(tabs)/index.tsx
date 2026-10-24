@@ -5,6 +5,7 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FactCard } from '@/components/FactCard';
+import { useShareImage } from '@/components/ShareImage';
 import { LivePill } from '@/components/LivePill';
 import { FloatingShell } from '@/components/Shell';
 import { StatsRow } from '@/components/Stats';
@@ -14,13 +15,15 @@ import { isLiveActivitySupported } from '@/live-activity';
 import { isFavorite } from '@/lib/collection';
 import { greeting } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
-import { shareCard } from '@/lib/share';
+import { isLiveActive } from '@/lib/preferences';
+import { explainCard } from '@/lib/explain';
 import { useNow } from '@/lib/use-now';
 import { useAppState } from '@/state/app-state';
 import { colors, fonts, radii } from '@/theme';
 
 export default function TodayScreen() {
   const insets = useSafeAreaInsets();
+  const { shareImage } = useShareImage();
   const { snapshot, prefs, library, next, toggleFavorite, setLockScreen } = useAppState();
   const card = snapshot?.card ?? null;
   const favorite = card ? isFavorite(library.favorites, card.factId) : false;
@@ -51,8 +54,8 @@ export default function TodayScreen() {
         </View>
         {isLiveActivitySupported ? (
           <LivePill
-            live={prefs.lockScreenEnabled && !snapshot?.lockScreenError}
-            onPress={() => setLockScreen(!prefs.lockScreenEnabled)}
+            live={isLiveActive(prefs) && !snapshot?.lockScreenError}
+            onPress={() => setLockScreen(!isLiveActive(prefs))}
           />
         ) : null}
       </Animated.View>
@@ -72,6 +75,7 @@ export default function TodayScreen() {
             nextAt={snapshot.nextUpdateAt}
             onSwiped={onNext}
             onDoubleTap={onDoubleTap}
+            onExplain={() => explainCard(card)}
           />
         </Animated.View>
       ) : (
@@ -82,7 +86,7 @@ export default function TodayScreen() {
       )}
 
       <Animated.View entering={FadeIn.delay(400)} style={styles.actions}>
-        <IconButton icon="square.and.arrow.up" label="Paylaş" onPress={() => card && shareCard(card)} />
+        <IconButton icon="square.and.arrow.up" label="Paylaş" onPress={() => card && shareImage(card)} />
         <IconButton
           icon={favorite ? 'heart.fill' : 'heart'}
           label={favorite ? 'Favorilerden çıkar' : 'Favorilere ekle'}
@@ -92,9 +96,9 @@ export default function TodayScreen() {
         />
         <IconButton icon="arrow.right" label="Sonraki bilgi" onPress={onNext} />
       </Animated.View>
-      <Text style={styles.hint}>Kaydır: sonraki · Çift dokun: favori</Text>
+      <Text style={styles.hint}>Kaydır: sonraki · Çift dokun: favori · ?: araştır</Text>
 
-      {snapshot?.lockScreenError && prefs.lockScreenEnabled ? (
+      {snapshot?.lockScreenError && isLiveActive(prefs) ? (
         <Animated.View entering={FadeInDown} style={styles.alert}>
           <SymbolView name="exclamationmark.lock" size={20} tintColor={colors.danger} />
           <View style={styles.alertText}>

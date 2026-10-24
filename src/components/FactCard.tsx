@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { SymbolView } from 'expo-symbols';
 import { useEffect } from 'react';
-import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { GestureDetector, usePanGesture, useSimultaneousGestures, useTapGesture } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -17,6 +17,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import type { SFSymbol } from 'sf-symbols-typescript';
 
 import { TideBar } from '@/components/TideBar';
+import { haptic } from '@/lib/haptics';
 import type { Card } from '@/lib/rotation';
 import { colors, fonts, radii } from '@/theme';
 
@@ -32,11 +33,13 @@ type FactCardProps = {
   /** Called after the card has flown off screen. */
   onSwiped: () => void;
   onDoubleTap: () => void;
+  /** Opens a web search that explains the fact. */
+  onExplain: () => void;
 };
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
-export function FactCard({ card, position, deckSize, shownAt, nextAt, onSwiped, onDoubleTap }: FactCardProps) {
+export function FactCard({ card, position, deckSize, shownAt, nextAt, onSwiped, onDoubleTap, onExplain }: FactCardProps) {
   const { width } = useWindowDimensions();
   const x = useSharedValue(0);
   const enter = useSharedValue(0);
@@ -113,8 +116,13 @@ export function FactCard({ card, position, deckSize, shownAt, nextAt, onSwiped, 
         accessible
         accessibilityLabel={`${card.topicTitle}. ${card.text}`}
         accessibilityHint="Sonraki bilgi için kaydır, favorilere eklemek için iki kez dokun."
-        accessibilityActions={[{ name: 'activate' }, { name: 'magicTap' }]}
-        onAccessibilityAction={(e) => (e.nativeEvent.actionName === 'magicTap' ? onDoubleTap() : onSwiped())}>
+        accessibilityActions={[{ name: 'activate' }, { name: 'magicTap' }, { name: 'explain', label: 'Google’da araştır' }]}
+        onAccessibilityAction={(e) => {
+          const action = e.nativeEvent.actionName;
+          if (action === 'magicTap') onDoubleTap();
+          else if (action === 'explain') onExplain();
+          else onSwiped();
+        }}>
         <LinearGradient
           colors={['rgba(70, 72, 88, 0.55)', 'rgba(15, 48, 64, 0.92)']}
           start={{ x: 0, y: 0 }}
@@ -130,9 +138,22 @@ export function FactCard({ card, position, deckSize, shownAt, nextAt, onSwiped, 
             <SymbolView name={card.symbol as SFSymbol} size={13} tintColor={colors.coral} weight="semibold" />
             <Text style={styles.chipText}>{card.topicTitle}</Text>
           </View>
-          <Text style={styles.position}>
-            {pad(position)} <Text style={styles.positionTotal}>/ {pad(deckSize)}</Text>
-          </Text>
+          <View style={styles.headerRight}>
+            <Text style={styles.position}>
+              {pad(position)} <Text style={styles.positionTotal}>/ {pad(deckSize)}</Text>
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Bu bilgiyi Google’da araştır"
+              hitSlop={10}
+              onPress={() => {
+                haptic.select();
+                onExplain();
+              }}
+              style={({ pressed }) => [styles.info, pressed && styles.infoPressed]}>
+              <SymbolView name="questionmark" size={13} tintColor={colors.coral} weight="bold" />
+            </Pressable>
+          </View>
         </View>
 
         <Text style={styles.text}>{card.text}</Text>
@@ -156,10 +177,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: colors.border,
-    shadowColor: '#000',
-    shadowOpacity: 0.35,
-    shadowRadius: 30,
-    shadowOffset: { width: 0, height: 18 },
+    // No shadow here: overflow hidden clips it, and iOS would still pay for an offscreen pass.
     minHeight: 300,
   },
   quote: {
@@ -185,6 +203,18 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(217, 155, 127, 0.25)',
   },
   chipText: { color: colors.coral, fontSize: 12, fontWeight: '700', letterSpacing: 1.1, textTransform: 'uppercase' },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  info: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(217, 155, 127, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(217, 155, 127, 0.3)',
+  },
+  infoPressed: { backgroundColor: 'rgba(217, 155, 127, 0.28)' },
   position: { fontFamily: fonts.serifItalic, fontSize: 16, color: colors.text },
   positionTotal: { color: colors.textFaint },
   text: {

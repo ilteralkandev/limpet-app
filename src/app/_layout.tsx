@@ -16,6 +16,7 @@ import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { Ocean } from '@/components/Ocean';
+import { ShareImageProvider } from '@/components/ShareImage';
 import { AppStateProvider } from '@/state/app-state';
 import { colors } from '@/theme';
 
@@ -49,15 +50,17 @@ export default function RootLayout() {
       <Ocean />
       <ThemeProvider value={navigationTheme}>
         <AppStateProvider>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: 'transparent' },
-              animation: 'fade',
-            }}>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
-          </Stack>
+          <ShareImageProvider>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: 'transparent' },
+                animation: 'fade',
+              }}>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
+            </Stack>
+          </ShareImageProvider>
         </AppStateProvider>
       </ThemeProvider>
       <StatusBar style="light" />

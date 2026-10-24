@@ -3,7 +3,9 @@ import type { Card } from '@/lib/rotation';
 
 export const isLiveActivitySupported = false;
 
-export async function showOnLockScreen(_card: Card, _position: string, _staleDate: Date): Promise<void> {}
+export type Surfaces = { lockScreen: boolean; island: boolean };
+
+export async function showOnLockScreen(_card: Card, _position: string, _staleDate: Date, _on: Surfaces): Promise<void> {}
 
 export async function hideFromLockScreen(): Promise<void> {}
 

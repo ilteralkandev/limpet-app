@@ -22,6 +22,10 @@ export type FactActivityProps = {
   symbol: SFSymbol;
   /** "7/24": position of the card in the deck. */
   position: string;
+  /** Show the card on the lock screen banner. When false only a quiet one-line strip remains (iOS always draws a card). */
+  lockScreen: boolean;
+  /** Show the Dynamic Island presentations. When false they are left empty. */
+  island: boolean;
   /** file:// URI of the mascot PNG in the shared widgets directory; empty when unavailable. */
   shell: string;
 };
@@ -38,11 +42,36 @@ const FactActivity = (props: FactActivityProps, environment: LiveActivityEnviron
   const contentOpacity = environment.isStale ? 0.55 : 1;
   const hasShell = props.shell.length > 0;
 
+  // iOS always draws a lock screen card for a running activity and enforces a minimum size,
+  // so "Dynamic Island only" keeps a quiet one-line strip instead of an empty glass box.
+  const quiet = (
+    <HStack spacing={8} modifiers={[padding({ horizontal: 16, vertical: 4 }), activityBackgroundTint('#061821')]}>
+      {hasShell ? (
+        <Image uiImage={props.shell} modifiers={[resizable(), frame({ width: 22, height: 18 })]} />
+      ) : (
+        <Image systemName={props.symbol} color={coral} size={14} />
+      )}
+      <Text
+        modifiers={[font({ size: 11, weight: 'bold' }), kerning(1.2), textCase('uppercase'), foregroundStyle(coral)]}
+      >
+        {props.topic}
+      </Text>
+      <Spacer />
+    </HStack>
+  );
+
   return {
-    banner: (
+    banner: !props.lockScreen ? (
+      quiet
+    ) : (
       <HStack
         spacing={14}
-        modifiers={[padding({ horizontal: 18, vertical: 16 }), opacity(contentOpacity), activityBackgroundTint('#061821')]}>
+        modifiers={[
+          padding({ horizontal: 18, vertical: 16 }),
+          opacity(contentOpacity),
+          activityBackgroundTint('#061821'),
+        ]}
+      >
         {hasShell ? (
           <Image uiImage={props.shell} modifiers={[resizable(), frame({ width: 46, height: 37 })]} />
         ) : (
@@ -51,11 +80,19 @@ const FactActivity = (props: FactActivityProps, environment: LiveActivityEnviron
         <VStack alignment="leading" spacing={6}>
           <HStack spacing={7}>
             <Text
-              modifiers={[font({ size: 11, weight: 'bold' }), kerning(1.2), textCase('uppercase'), foregroundStyle(coral)]}>
+              modifiers={[
+                font({ size: 11, weight: 'bold' }),
+                kerning(1.2),
+                textCase('uppercase'),
+                foregroundStyle(coral),
+              ]}
+            >
               {props.topic}
             </Text>
             <Spacer />
-            <Text modifiers={[font({ size: 12, design: 'serif' }), italic(), foregroundStyle(mist)]}>{props.position}</Text>
+            <Text modifiers={[font({ size: 12, design: 'serif' }), italic(), foregroundStyle(mist)]}>
+              {props.position}
+            </Text>
           </HStack>
           <Text
             modifiers={[
@@ -63,39 +100,45 @@ const FactActivity = (props: FactActivityProps, environment: LiveActivityEnviron
               foregroundStyle(white),
               lineLimit(3),
               minimumScaleFactor(0.8),
-            ]}>
+            ]}
+          >
             {props.text}
           </Text>
         </VStack>
       </HStack>
     ),
-    compactLeading: hasShell ? (
+    compactLeading: !props.island ? undefined : hasShell ? (
       <Image uiImage={props.shell} modifiers={[resizable(), frame({ width: 22, height: 18 })]} />
     ) : (
       <Image systemName={props.symbol} color={coral} />
     ),
-    compactTrailing: <Image systemName={props.symbol} color={coral} size={13} />,
-    minimal: hasShell ? (
+    compactTrailing: !props.island ? undefined : <Image systemName={props.symbol} color={coral} size={13} />,
+    minimal: !props.island ? undefined : hasShell ? (
       <Image uiImage={props.shell} modifiers={[resizable(), frame({ width: 20, height: 16 })]} />
     ) : (
       <Image systemName={props.symbol} color={coral} />
     ),
-    expandedLeading: hasShell ? (
-      <Image uiImage={props.shell} modifiers={[resizable(), frame({ width: 34, height: 27 }), padding({ leading: 6 })]} />
+    expandedLeading: !props.island ? undefined : hasShell ? (
+      <Image
+        uiImage={props.shell}
+        modifiers={[resizable(), frame({ width: 34, height: 27 }), padding({ leading: 6 })]}
+      />
     ) : (
       <Image systemName={props.symbol} color={coral} size={18} />
     ),
-    expandedCenter: (
+    expandedCenter: !props.island ? undefined : (
       <Text modifiers={[font({ size: 12, weight: 'bold' }), kerning(1), textCase('uppercase'), foregroundStyle(coral)]}>
         {props.topic}
       </Text>
     ),
-    expandedTrailing: (
-      <Text modifiers={[font({ size: 12, design: 'serif' }), italic(), foregroundStyle(mist), padding({ trailing: 6 })]}>
+    expandedTrailing: !props.island ? undefined : (
+      <Text
+        modifiers={[font({ size: 12, design: 'serif' }), italic(), foregroundStyle(mist), padding({ trailing: 6 })]}
+      >
         {props.position}
       </Text>
     ),
-    expandedBottom: (
+    expandedBottom: !props.island ? undefined : (
       <Text
         modifiers={[
           font({ size: 15, weight: 'medium', design: 'serif' }),
@@ -103,7 +146,8 @@ const FactActivity = (props: FactActivityProps, environment: LiveActivityEnviron
           lineLimit(3),
           minimumScaleFactor(0.8),
           padding({ horizontal: 8, bottom: 6 }),
-        ]}>
+        ]}
+      >
         {props.text}
       </Text>
     ),

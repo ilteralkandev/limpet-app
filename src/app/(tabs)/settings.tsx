@@ -1,5 +1,5 @@
 import Constants from 'expo-constants';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Linking, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -23,11 +23,16 @@ const sameSet = (a: string[], b: string[]) => a.length === b.length && a.every((
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const now = useNow();
-  const { prefs, snapshot, savePreferences, setLockScreen, updateContent } = useAppState();
+  const { prefs, snapshot, savePreferences, setSurfaces, setNotifications, updateContent } = useAppState();
   const [catalog, setCatalog] = useState<TopicSummary[] | null>(null);
   const [offline, setOffline] = useState(false);
+  const [notificationsDenied, setNotificationsDenied] = useState(false);
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [topicIds, setTopicIds] = useState(prefs.topicIds);
+  const toggleTopic = useCallback(
+    (id: string) => setTopicIds((ids) => (ids.includes(id) ? ids.filter((t) => t !== id) : [...ids, id])),
+    [],
+  );
   const [intervalMinutes, setIntervalMinutes] = useState(prefs.intervalMinutes);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -96,9 +101,7 @@ export default function SettingsScreen() {
             <TopicGrid
               topics={catalog}
               selected={topicIds}
-              onToggle={(id) =>
-                setTopicIds((ids) => (ids.includes(id) ? ids.filter((t) => t !== id) : [...ids, id]))
-              }
+              onToggle={toggleTopic}
             />
           ) : catalogError ? (
             <View style={styles.card}>
@@ -122,29 +125,73 @@ export default function SettingsScreen() {
         </Section>
 
         {isLiveActivitySupported ? (
-          <Section title="Kilit ekranı">
+          <Section title="kilit ekranı">
             <View style={styles.card}>
               <View style={styles.row}>
                 <View style={styles.rowText}>
-                  <Text style={styles.rowTitle}>Live Activity</Text>
-                  <Text style={styles.muted}>Kart kilit ekranına ve Dynamic Island’a sabitlenir.</Text>
+                  <Text style={styles.rowTitle}>Kilit ekranında göster</Text>
+                  <Text style={styles.muted}>Kart kilit ekranına sabitlenir.</Text>
                 </View>
                 <Switch
                   value={prefs.lockScreenEnabled}
                   onValueChange={(v) => {
                     haptic.select();
-                    setLockScreen(v);
+                    setSurfaces({ lockScreenEnabled: v });
                   }}
                   trackColor={{ true: colors.coral, false: colors.slate }}
                   thumbColor={colors.text}
                 />
               </View>
-              {snapshot?.lockScreenError && prefs.lockScreenEnabled ? (
+              {prefs.islandCapable ? (
+                <View style={styles.row}>
+                  <View style={styles.rowText}>
+                    <Text style={styles.rowTitle}>Dynamic Island’da göster</Text>
+                    <Text style={styles.muted}>Kabuk adanın içinde küçük bir simge olarak durur.</Text>
+                  </View>
+                  <Switch
+                    value={prefs.islandEnabled}
+                    onValueChange={(v) => {
+                      haptic.select();
+                      setSurfaces({ islandEnabled: v });
+                    }}
+                    trackColor={{ true: colors.coral, false: colors.slate }}
+                    thumbColor={colors.text}
+                  />
+                </View>
+              ) : null}
+              {snapshot?.lockScreenError && (prefs.lockScreenEnabled || (prefs.islandEnabled && prefs.islandCapable)) ? (
                 <Button title="iOS ayarlarında izin ver" variant="ghost" icon="gear" onPress={() => Linking.openSettings()} />
               ) : null}
             </View>
           </Section>
         ) : null}
+
+        <Section title="bildirimler">
+          <View style={styles.card}>
+            <View style={styles.row}>
+              <View style={styles.rowText}>
+                <Text style={styles.rowTitle}>Bilgi bildirimleri</Text>
+                <Text style={styles.muted}>
+                  Her yeni bilgi seçtiğin ritimde bildirim olarak da gelir. Gece 23:00–08:00 arası sessizdir.
+                </Text>
+              </View>
+              <Switch
+                value={prefs.notificationsEnabled}
+                onValueChange={async (v) => {
+                  haptic.select();
+                  setNotificationsDenied(false);
+                  const on = await setNotifications(v);
+                  if (v && !on) setNotificationsDenied(true);
+                }}
+                trackColor={{ true: colors.coral, false: colors.slate }}
+                thumbColor={colors.text}
+              />
+            </View>
+            {notificationsDenied ? (
+              <Button title="iOS ayarlarında izin ver" variant="ghost" icon="gear" onPress={() => Linking.openSettings()} />
+            ) : null}
+          </View>
+        </Section>
 
         <Section title="İçerik">
           <View style={styles.card}>
@@ -173,6 +220,9 @@ export default function SettingsScreen() {
           <ShellMark size={56} />
           <Text style={styles.footerText}>
             Limpet {Constants.expoConfig?.version} · kayaya tutunan bilgiler
+          </Text>
+          <Text style={styles.credit}>
+            Bilgiler genel kültür amaçlıdır; tıbbi, hukuki veya finansal tavsiye değildir.
           </Text>
           <Text style={styles.credit}>
             Bazı bilgiler Vikipedi’den alınmıştır (CC BY-SA 4.0): “Genel Kültür” ve “Tarihte Bugün” konuları.

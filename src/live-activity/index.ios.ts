@@ -9,12 +9,16 @@ import { ensureMascot } from './mascot.ios';
 export const isLiveActivitySupported = true;
 
 /** Shows the card on the lock screen, reusing the running activity when there is one. */
-export async function showOnLockScreen(card: Card, position: string, staleDate: Date): Promise<void> {
+export type Surfaces = { lockScreen: boolean; island: boolean };
+
+export async function showOnLockScreen(card: Card, position: string, staleDate: Date, on: Surfaces): Promise<void> {
   const props = {
     topic: card.topicTitle,
     text: card.text,
     symbol: card.symbol as SFSymbol,
     position,
+    lockScreen: on.lockScreen,
+    island: on.island,
     shell: (await ensureMascot()) ?? '',
   };
   const [current, ...extra] = FactActivity.getInstances();

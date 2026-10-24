@@ -4,7 +4,23 @@ export type Preferences = {
   topicIds: string[];
   intervalMinutes: number;
   lockScreenEnabled: boolean;
+  /** Dynamic Island presentation of the same Live Activity. Only effective on islandCapable devices. */
+  islandEnabled: boolean;
+  /** Also deliver each card as a local notification. Off until the user allows it. */
+  notificationsEnabled: boolean;
+  /** Written by the UI at startup (needs safe-area insets), so background tasks know it too. */
+  islandCapable: boolean;
 };
+
+/** Which surfaces the Live Activity should render on; both false means no activity at all. */
+export function surfaces(prefs: Preferences): { lockScreen: boolean; island: boolean } {
+  return { lockScreen: prefs.lockScreenEnabled, island: prefs.islandEnabled && prefs.islandCapable };
+}
+
+export function isLiveActive(prefs: Preferences): boolean {
+  const s = surfaces(prefs);
+  return s.lockScreen || s.island;
+}
 
 export const INTERVAL_OPTIONS = [
   { minutes: 60, label: '1 saat' },
@@ -16,6 +32,9 @@ export const DEFAULT_PREFERENCES: Preferences = {
   topicIds: [],
   intervalMinutes: 60,
   lockScreenEnabled: true,
+  islandEnabled: true,
+  notificationsEnabled: false,
+  islandCapable: false,
 };
 
 const KEY = 'prefs:v1';

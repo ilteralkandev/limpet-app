@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useShareImage } from '@/components/ShareImage';
 import { SavedRow } from '@/components/SavedRow';
 import { Segmented } from '@/components/Segmented';
 import { ShellMark } from '@/components/Shell';
@@ -10,7 +11,6 @@ import { TAB_BAR_CLEARANCE } from '@/components/TabBar';
 import { Eyebrow, Title } from '@/components/ui';
 import { isFavorite, type SavedCard } from '@/lib/collection';
 import { haptic } from '@/lib/haptics';
-import { shareCard } from '@/lib/share';
 import { useNow } from '@/lib/use-now';
 import { useAppState } from '@/state/app-state';
 import { colors, fonts } from '@/theme';
@@ -35,6 +35,7 @@ export default function CollectionScreen() {
   const insets = useSafeAreaInsets();
   const now = useNow();
   const { library, toggleFavorite } = useAppState();
+  const { shareImage } = useShareImage();
   const [tab, setTab] = useState<Tab>('favorites');
   const data = tab === 'favorites' ? library.favorites : library.history;
 
@@ -79,7 +80,7 @@ export default function CollectionScreen() {
             item={item}
             now={now}
             favorite={isFavorite(library.favorites, item.factId)}
-            onShare={() => shareCard(item)}
+            onShare={() => shareImage(item)}
             onToggleFavorite={async () => {
               if (await toggleFavorite(item)) haptic.success();
             }}

@@ -31,6 +31,30 @@ src/live-activity/index.ios.ts → FactActivity.ios.tsx (expo-widgets createLive
 - `src/tasks/rotate-task.ts` `defineTask`'ı modül seviyesinde çağırır ve kök `_layout.tsx` onu import eder; bu import kaldırılırsa arka plan görevi sessizce çalışmaz.
 - Native klasörler (`ios/`, `android/`) CNG ile üretilir ve gitignore'dadır. Native ayar = `app.json` plugin seçenekleri.
 
+## Kilit ekranı / Dynamic Island ayrımı
+
+- iOS'ta tek bir Live Activity hem kilit ekranı kartını hem Dynamic Island'ı çizer; yüzeyler API'de ayrı açılıp kapatılamaz. Bu yüzden `FactActivity` props'u `lockScreen`/`island` bayrakları taşır: `island=false` → ada bölümleri `undefined` (boş), `lockScreen=false` → kart yerine tek satırlık sessiz şerit (iOS çalışan etkinlik için kartı her zaman çizer ve minimum boyut uygular; tamamen gizlenemez). İkisi de kapalıysa etkinlik sonlandırılır (`isLiveActive`, `surfaces` — `preferences.ts`).
+- Ada anahtarı yalnızca Dynamic Island'lı telefonlarda görünür: `app-state.tsx` üst güvenli alan ≥ 55pt ise `islandCapable`'ı bir kez tercihlere yazar (arka plan görevinin güvenli alan bilgisi yoktur).
+- Ada görünümünü simülatörde ekran görüntüsüyle doğrulayamadık (simülatör adayı ana ekranda çizmiyor); kilit ekranı tarafı doğrulandı.
+- `axe tap` ile `Switch` açmak için `--tap-style physical` gerekir; varsayılan dokunuş anahtarı çevirmez.
+
+## Performans notları
+
+- `rotate()` her 30 sn çalışır; bu yüzden ayrıştırılmış paketler bellekte tutulur (`content/cache.ts` `memory`), deste yalnızca girdileri değişince yeniden kurulur (`engine.ts` `deckFor`) ve `app-state.tsx` `sync` yalnızca değişen state'i günceller (sessiz bir dakikada ekranlar yeniden çizilmez). Paket yazan her yeni kod `memory`'yi de güncellemeli.
+- `TideBar` 15 sn'de bir güncellenir (saniyelik JS tick'i gereksizdi). Gölgeli görünümler opak arka plana sahip olmalı ya da gölge kullanılmamalı (`overflow: 'hidden'` gölgeyi zaten keser; Metro'daki "shadow set but cannot calculate shadow efficiently" uyarısı bunu işaret eder).
+- Açılış `checkContent` (ağ) beklemez; ilk kart hazır olunca uygulama görünür. `TopicGrid` kutuları `memo`; `onToggle` kararlı (`useCallback`) olmalı.
+
+## Zaman çizelgesi, bildirimler ve görsel paylaşım
+
+- Deste bir **zaman çizelgesidir**: aralık başına bir kart, uygulama kapalı olsa da. `rotate()` kaç aralık geçtiyse (`dueSteps`) o kadar ilerler ve `shownAt`'ı çizelgeye hizalı tutar (`shownAt + adım × aralık`); "Sonraki" düğmesi (force) çizelgeyi şimdiden yeniden başlatır.
+- Yerel bildirimler (`lib/notifications.ts`, `expo-notifications`, sunucu yok) aynı çizelgeyi izler: `planNotifications` önümüzdeki ≤60 kartı (iOS 64 bekleyen bildirim sınırı) aralıklarla planlar. 23:00–08:00 arası bildirim atılmaz ama kartlar yine geçer, böylece uygulama ile bildirimler aynı konumda kalır. Yalnızca çizelge ilerleyince/tercih değişince yeniden planlanır (`notifications:plan` imzası); uygulama haftalarca açılmazsa bildirimler 60. slotta biter. Tercih varsayılan kapalıdır, izin Ayarlar'daki anahtarla istenir (`setNotificationsEnabled`). `app.json`'a `expo-notifications` eklentisi eklenmedi: yerel bildirimler için push yetkisi gerekmez.
+- Paylaşım artık görseldir: `components/ShareImage.tsx` ekran dışında 360×450'lik kartı çizer, `react-native-view-shot` ile 1080×1350 PNG yapar ve `Share.share({url})` açar; başarısız olursa düz metne düşer (`lib/share.ts`). `ShareImageProvider` kök `_layout.tsx`'tedir, `useShareImage()` ile kullanılır.
+- İki yeni yerel modül (`expo-notifications`, `react-native-view-shot`) eklendi: `npx expo prebuild --platform ios` + yeniden derleme gerekir.
+
+## Bilgiyi araştır (?)
+
+- Kartın sağ üstündeki "?" düğmesi (`FactCard.onExplain` → `lib/explain.ts`) bilgi metniyle Google araması açar; Google çoğu sorguda üstte Gemini destekli "AI Bakışı" gösterir. AI Modu derin bağlantısı (`udm=50`) belgelenmediği için kullanılmaz. Kart `accessible` olduğundan düğme VoiceOver'da "Google'da araştır" eylemi olarak da sunulur; `axe` ile düğmeye etiketle değil koordinatla dokunun.
+
 ## Simülatörde Live Activity testi
 
 - iOS 27 simülatöründe Ayarlar → Uygulamalar → Limpet → **Canlı Etkinlikler varsayılan olarak kapalı** gelir; kapalıyken `start` "Live Activities are not supported on this device" hatası verir. Anahtar otomasyonla (AXe) değiştirilemiyor, elle açılmalı.
@@ -57,7 +81,7 @@ src/live-activity/index.ios.ts → FactActivity.ios.tsx (expo-widgets createLive
 - Şu an 18 konu: 16 elle derlenmiş konu × 100 bilgi + "Genel Kültür" (≈325) + "Tarihte Bugün" (≈1.100, takvimdeki gün başına en fazla 3 olay, metin "24 Ekim 1929: …" biçiminde). Cihaz yalnızca seçili konuların paketini indirir ve yalnızca `version`'ı yükselenleri çeker; en büyük paket `today` (≈210 KB ham, ≈45–60 KB sıkıştırılmış).
 - **Vikipedi kaynaklı konular:** "Genel Kültür" Türkçe Vikipedi'nin "Biliyor muydunuz?" arşivinden (günlük sayfalar `Vikipedi:Biliyor muydunuz?/YYYY-AA-GG` + `Arşiv/*`), "Tarihte Bugün" `api/rest_v1/feed/onthisday/events/AA/GG` uç noktasından çekildi (lisans CC BY-SA 4.0; Ayarlar altbilgisinde atıf var, kaldırılmamalı). Sınırlar: arşivde yalnızca ~650 benzersiz günlük + ~480 arşiv satırı var, 160 karakteri geçenler ve tekrarlar elendi → ≈325 bilgi; konu eşlemesi (kategori anahtar kelimeleri) gürültülü olduğu için hepsi tek konuya konuldu. Yeni bilgi isterseniz aynı kaynaklar yeniden çekilip yalnızca **dosya sonuna** eklenmeli (id'ler satır sırasına bağlı).
 - Arayüzde konu başına bilgi sayısı **gösterilmez** (bilinçli; ilk sürümlerde veri sınırlı). Ritim seçenekleri yalnızca 1/3/6 saat (`INTERVAL_OPTIONS`); eski kayıtlı 15/30 dk tercihi `loadPreferences` ile 1 saate çekilir.
-- Deste sırası: `buildDeck(packs, seed)` konular arası round-robin, konu içi sıra `deck:seed` (kurulum başına bir kez üretilir) + fact id hash'ine göre karışık; paket büyüyünce eski bilgilerin göreli sırası bozulmaz. Seed 0 = yazılı sıra (testler).
+- Deste sırası: `buildDeck(packs, seed)` her turda her konudan bir bilgi alır ama **tur içindeki konu sırası da tohuma göre karışıktır** (görünür bir desen yok); konu içi sıra `deck:seed` (kurulum başına bir kez üretilir) + fact id hash'ine göre karışık; paket büyüyünce eski bilgilerin göreli sırası bozulmaz. Seed 0 = yazılı sıra (testler).
 - `content:validate` tüm konular arasında birebir aynı metni de reddeder.
 - Yeni konu: `topics/<id>.json` ekle + `index.json`'a girdi ekle → `npm run content:validate`.
 - Üretim adresi `app.json → extra.contentBaseUrl` = `https://limpet-app.netlify.app` (Netlify, `main`'e bağlı); yerelde `EXPO_PUBLIC_CONTENT_BASE_URL=http://localhost:4000` ile `npm run content:serve` kullanılır.
