@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import type { TopicPack } from './content/types.ts';
-import { advance, buildDeck, currentCard, dueSteps, INITIAL_ROTATION, isDue, planNotifications } from './rotation.ts';
+import { advance, buildDeck, currentCard, cardAtTime, dueSteps, INITIAL_ROTATION, isDue, nextNotification } from './rotation.ts';
 
 const pack = (id: string, n: number): TopicPack => ({
   id,
@@ -104,24 +104,35 @@ describe('advance by several steps', () => {
   });
 });
 
-describe('planNotifications', () => {
+describe('notification timeline', () => {
   const hour = 60 * 60_000;
   const deck = buildDeck([pack('a', 10)]);
   const state = { factId: 'a-2', shownAt: 0 };
 
-  it('plans one notification per interval, following the deck', () => {
-    const plan = planNotifications(deck, state, 60, 0, { limit: 3 });
-    assert.deepEqual(plan.map((p) => p.card.factId), ['a-3', 'a-4', 'a-5']);
-    assert.deepEqual(plan.map((p) => p.at), [hour, 2 * hour, 3 * hour]);
+  it('shows the card the app itself shows at that time', () => {
+    assert.equal(cardAtTime(deck, state, 60, 3 * hour)?.factId, 'a-5');
+    assert.equal(cardAtTime(deck, { factId: 'a-9', shownAt: 0 }, 60, hour)?.factId, 'a-0');
+    assert.equal(cardAtTime(deck, { factId: 'gone', shownAt: 0 }, 60, hour), null);
   });
 
-  it('keeps the position of quiet slots so the app and notifications stay in step', () => {
-    const quiet = (at: Date) => at.getTime() === 2 * hour;
-    const plan = planNotifications(deck, state, 60, 0, { limit: 3, isQuiet: quiet });
-    assert.deepEqual(plan.map((p) => p.card.factId), ['a-3', 'a-5', 'a-6']);
+  it('schedules only the next interval boundary', () => {
+    const next = nextNotification(deck, state, 60, 10 * 60_000);
+    assert.equal(next?.at, hour);
+    assert.equal(next?.card.factId, 'a-3');
   });
 
-  it('plans nothing when the current card is not in the deck', () => {
-    assert.deepEqual(planNotifications(deck, { factId: 'gone', shownAt: 0 }, 60, 0), []);
+  it('skips quiet slots but lets their cards pass', () => {
+    const quiet = (at: Date) => at.getTime() === hour;
+    const next = nextNotification(deck, state, 60, 0, quiet);
+    assert.equal(next?.at, 2 * hour);
+    assert.equal(next?.card.factId, 'a-4');
+  });
+
+  it('does not schedule a slot that is about to pass', () => {
+    assert.equal(nextNotification(deck, state, 60, hour - 5_000)?.at, 2 * hour);
+  });
+
+  it('returns nothing when the current card is not in the deck', () => {
+    assert.equal(nextNotification(deck, { factId: 'gone', shownAt: 0 }, 60, 0), null);
   });
 });

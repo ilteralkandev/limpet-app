@@ -1,5 +1,5 @@
 // Persistence for the user's personal data: favorites, history, counters, streak.
-import { pushHistory, toggleFavorite, type SavedCard } from '@/lib/collection';
+import { isFavorite, pushHistory, toggleFavorite, type SavedCard } from '@/lib/collection';
 import type { Card } from '@/lib/rotation';
 import { readJSON, writeJSON } from '@/lib/storage';
 import { INITIAL_STREAK, recordVisit, type Streak } from '@/lib/streak';
@@ -28,6 +28,15 @@ export async function loadLibrary(): Promise<Library> {
 
 export async function toggleFavoriteStored(card: Card): Promise<SavedCard[]> {
   const next = toggleFavorite((await readJSON<SavedCard[]>(FAVORITES_KEY)) ?? [], card, Date.now());
+  await writeJSON(FAVORITES_KEY, next);
+  return next;
+}
+
+/** Adds a favorite without toggling (used by the notification button); null if it was already one. */
+export async function addFavoriteStored(card: Card): Promise<SavedCard[] | null> {
+  const list = (await readJSON<SavedCard[]>(FAVORITES_KEY)) ?? [];
+  if (isFavorite(list, card.factId)) return null;
+  const next = toggleFavorite(list, card, Date.now());
   await writeJSON(FAVORITES_KEY, next);
   return next;
 }

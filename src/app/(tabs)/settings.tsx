@@ -179,7 +179,7 @@ export default function SettingsScreen() {
               <View style={styles.rowText}>
                 <Text style={styles.rowTitle}>Bilgi bildirimleri</Text>
                 <Text style={styles.muted}>
-                  Her yeni bilgi seçtiğin ritimde bildirim olarak da gelir. Gece 23:00–08:00 arası sessizdir.
+                  Bilgiler seçtiğin ritimde bildirim olarak da gelir. Bildirimi kaydırıp sildiğinde ya da uygulamayı açtığında bir sonraki gelir; yanıtsız kalanlar birikmez. Gece 23:00–08:00 arası sessizdir.
                 </Text>
               </View>
               <Switch

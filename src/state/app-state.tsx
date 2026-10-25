@@ -13,7 +13,13 @@ import {
   updateContentNow,
   type Snapshot,
 } from '@/lib/engine';
-import { loadLibrary, recordVisitStored, toggleFavoriteStored, type Library } from '@/lib/library';
+import { addFavoriteStored, loadLibrary, recordVisitStored, toggleFavoriteStored, type Library } from '@/lib/library';
+import {
+  clearDeliveredNotifications,
+  registerNotificationActions,
+  subscribeFavoriteActions,
+} from '@/lib/notifications';
+import { readJSON, writeJSON } from '@/lib/storage';
 import {
   DEFAULT_PREFERENCES,
   loadPreferences,
@@ -25,6 +31,7 @@ import { INITIAL_STREAK } from '@/lib/streak';
 
 // While the app is open, check this often whether the card is due.
 const FOREGROUND_POLL_MS = 30_000;
+const HANDLED_ACTION_KEY = 'notifications:handledAction';
 // Top safe-area inset: Dynamic Island phones report 59pt, notch phones 47–50pt.
 const DYNAMIC_ISLAND_MIN_INSET = 55;
 
@@ -101,6 +108,19 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     return downloaded;
   }, [run, sync]);
 
+  // "Favorilere ekle" button on notifications; iOS may deliver a tap that happened while the app was closed.
+  useEffect(() => {
+    registerNotificationActions().catch(() => {});
+    return subscribeFavoriteActions((card, key) => {
+      run(async () => {
+        if ((await readJSON<string>(HANDLED_ACTION_KEY)) === key) return;
+        await writeJSON(HANDLED_ACTION_KEY, key);
+        const favorites = await addFavoriteStored(card);
+        if (favorites) setLibrary((lib) => ({ ...lib, favorites }));
+      }).catch(() => {});
+    });
+  }, [run]);
+
   const setSurfaces = useCallback(
     (change: { lockScreenEnabled?: boolean; islandEnabled?: boolean }) =>
       run(async () => {
@@ -123,8 +143,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, [run]);
 
   useEffect(() => {
+    // Opening the app means the latest card has been seen: clear the leftovers in Notification Center
+    // first, so the next notification is scheduled right away.
+    const opened = () => clearDeliveredNotifications().catch(() => {}).then(() => recordVisitStored());
     // Show the app as soon as the first card is ready; the content check may need the network.
-    recordVisitStored()
+    opened()
       .then(() => sync())
       .finally(() => setReady(true))
       .then(() => checkContent());
@@ -133,7 +156,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       if (AppState.currentState === 'active') sync();
     }, FOREGROUND_POLL_MS);
     const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active') recordVisitStored().then(() => sync()).then(() => checkContent());
+      if (state === 'active') opened().then(() => sync()).then(() => checkContent());
     });
     return () => {
       clearInterval(timer);

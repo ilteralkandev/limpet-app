@@ -48,7 +48,32 @@
       "typedRoutes": true
     },
     "extra": {
-      "contentBaseUrl": "https://limpet-app.netlify.app"
+      "contentBaseUrl": "https://limpet-app.netlify.app",
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "build": {
+          "experimental": {
+            "ios": {
+              "appExtensions": [
+                {
+                  "targetName": "ExpoWidgetsTarget",
+                  "bundleIdentifier": "com.limpetapp.app.ExpoWidgetsTarget",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.limpetapp.app"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "projectId": "4f33df62-2edf-4ebd-a67b-4ff437fb39f9"
+      }
     },
     "backgroundColor": "#0F3040"
   }

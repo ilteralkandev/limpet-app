@@ -89,27 +89,33 @@ export function advance(deck: Card[], state: RotationState, shownAt: number, ste
 
 export type PlannedNotification = { at: number; card: Card };
 
+/** The card the timeline shows at time `at`: the current card plus the whole intervals in between. */
+export function cardAtTime(deck: Card[], state: RotationState, intervalMinutes: number, at: number): Card | null {
+  const start = deck.findIndex((c) => c.factId === state.factId);
+  if (start < 0) return null;
+  const steps = Math.round((at - state.shownAt) / (intervalMinutes * 60_000));
+  return deck[(((start + steps) % deck.length) + deck.length) % deck.length];
+}
+
 /**
- * The next cards on the timeline as local notifications: card k+1 after the current one is due
- * k intervals after it was shown. Slots that `isQuiet` rejects (e.g. at night) are skipped, but
- * their cards still pass, so the app and the notifications always agree on the position.
+ * The next notification on the timeline: the first interval boundary after `now` that is not
+ * quiet. Quiet slots (e.g. at night) are skipped but their cards still pass, so notifications
+ * always show the card the app itself would show at that moment.
  */
-export function planNotifications(
+export function nextNotification(
   deck: Card[],
   state: RotationState,
   intervalMinutes: number,
   now: number,
-  { limit = 60, isQuiet = (_at: Date) => false }: { limit?: number; isQuiet?: (at: Date) => boolean } = {},
-): PlannedNotification[] {
-  const start = deck.findIndex((c) => c.factId === state.factId);
-  if (start < 0) return [];
-  const planned: PlannedNotification[] = [];
-  for (let k = 1; planned.length < limit && k <= limit * 4; k++) {
+  isQuiet: (at: Date) => boolean = () => false,
+): PlannedNotification | null {
+  for (let k = 1; k <= 96; k++) {
     const at = state.shownAt + k * intervalMinutes * 60_000;
-    if (at <= now || isQuiet(new Date(at))) continue;
-    planned.push({ at, card: deck[(start + k) % deck.length] });
+    if (at <= now + DUE_TOLERANCE_MS || isQuiet(new Date(at))) continue;
+    const card = cardAtTime(deck, state, intervalMinutes, at);
+    return card ? { at, card } : null;
   }
-  return planned;
+  return null;
 }
 
 export function nextUpdateAt(state: RotationState, intervalMinutes: number): number {

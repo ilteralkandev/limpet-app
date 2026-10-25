@@ -12,23 +12,27 @@ import {
   dueSteps,
   INITIAL_ROTATION,
   nextUpdateAt,
-  planNotifications,
+  cardAtTime,
+  nextNotification,
   type Card,
   type RotationState,
 } from '@/lib/rotation';
 import {
+  cancelFactNotifications,
   isQuietHour,
-  NOTIFICATION_LIMIT,
+  isStillPresented,
   notificationsAllowed,
+  pendingFactNotification,
   requestNotificationPermission,
-  scheduleNotifications,
+  scheduleFactNotification,
 } from '@/lib/notifications';
 import { readJSON, writeJSON } from '@/lib/storage';
 import { cancelBackgroundRotation, scheduleBackgroundRotation } from '@/tasks/rotate-task';
 
 const ROTATION_KEY = 'rotation:v1';
 const DECK_SEED_KEY = 'deck:seed';
-const NOTIFICATION_PLAN_KEY = 'notifications:plan';
+const NOTIFICATIONS_ON_KEY = 'notifications:on';
+const NOTIFICATION_LAST_KEY = 'notifications:last';
 const CONTENT_CHECKED_AT_KEY = 'content:checkedAt';
 // New packs reach users within this window after being published.
 const CONTENT_CHECK_INTERVAL_MS = 6 * 60 * 60_000;
@@ -107,7 +111,7 @@ export async function rotate({ force = false, refreshLockScreen = false }: Rotat
   }
 
   try {
-    await syncNotifications(prefs, deck, rotation, now, advanced || refreshLockScreen);
+    await syncNotifications(prefs, deck, rotation, now);
   } catch {
     // Notifications are a bonus; never let them break the card.
   }
@@ -122,24 +126,39 @@ export async function rotate({ force = false, refreshLockScreen = false }: Rotat
   };
 }
 
-/** Reschedules only when the timeline moved, so the 30-second foreground poll stays cheap. */
-async function syncNotifications(
-  prefs: Preferences,
-  deck: Card[],
-  rotation: RotationState,
-  now: number,
-  changed: boolean,
-) {
-  const signature = prefs.notificationsEnabled
-    ? `${rotation.factId}:${rotation.shownAt}:${prefs.intervalMinutes}:${deck.length}`
-    : 'off';
-  if (!changed && (await readJSON<string>(NOTIFICATION_PLAN_KEY)) === signature) return;
-  const allowed = prefs.notificationsEnabled && (await notificationsAllowed());
-  const plan = allowed
-    ? planNotifications(deck, rotation, prefs.intervalMinutes, now, { limit: NOTIFICATION_LIMIT, isQuiet: isQuietHour })
-    : [];
-  await scheduleNotifications(plan);
-  await writeJSON(NOTIFICATION_PLAN_KEY, signature);
+/**
+ * Notifications arrive one at a time. A new one is scheduled only after the previous one was
+ * dealt with (swiped away, tapped, or the app was opened), so ignored ones never pile up.
+ * Runs on every rotate(): app start/foreground, the 30 s poll and the background task.
+ */
+async function syncNotifications(prefs: Preferences, deck: Card[], rotation: RotationState, now: number) {
+  const allowed = prefs.notificationsEnabled && deck.length > 0 && (await notificationsAllowed());
+  if (!allowed) {
+    if ((await readJSON<boolean>(NOTIFICATIONS_ON_KEY)) !== false) {
+      await cancelFactNotifications();
+      await writeJSON(NOTIFICATIONS_ON_KEY, false);
+    }
+    return;
+  }
+  await writeJSON(NOTIFICATIONS_ON_KEY, true);
+
+  // Anything that changes what a slot shows (interval, topics, "Sonraki") invalidates a pending one.
+  const signature = `${prefs.intervalMinutes}:${deck.length}`;
+  const pending = await pendingFactNotification();
+  if (pending) {
+    const expected = cardAtTime(deck, rotation, prefs.intervalMinutes, pending.at);
+    if (pending.signature === signature && expected?.factId === pending.factId) return;
+    await cancelFactNotifications();
+  } else {
+    // The previous one has fired. If it is still in Notification Center nobody has dealt with it yet.
+    const last = await readJSON<{ id: string; at: number }>(NOTIFICATION_LAST_KEY);
+    if (last && last.at <= now && (await isStillPresented(last.id))) return;
+  }
+
+  const next = nextNotification(deck, rotation, prefs.intervalMinutes, now, isQuietHour);
+  if (!next) return;
+  const id = await scheduleFactNotification(next.at, next.card, signature);
+  await writeJSON(NOTIFICATION_LAST_KEY, { id, at: next.at });
 }
 
 async function syncLockScreen(
