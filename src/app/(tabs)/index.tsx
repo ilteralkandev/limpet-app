@@ -49,7 +49,7 @@ export default function TodayScreen() {
       showsVerticalScrollIndicator={false}>
       <Animated.View entering={FadeInDown.duration(600)} style={styles.brandRow}>
         <View style={styles.brand}>
-          <FloatingShell size={40} />
+          <FloatingShell size={48} />
           <Text style={styles.wordmark}>Limpet</Text>
         </View>
         {isLiveActivitySupported ? (

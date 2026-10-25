@@ -4,7 +4,7 @@ import { widgetsDirectory } from 'expo-widgets';
 
 // The widget extension runs in its own process and cannot reach the app bundle, so the
 // mascot PNG is copied once into the shared widgets directory (an App Group container).
-const FILE_NAME = 'limpet-shell-v1.png';
+const FILE_NAME = 'limpet-shell-v2.png';
 
 let pending: Promise<string | null> | null = null;
 
